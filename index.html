@@ -952,7 +952,52 @@ async function selectThemeColor(hex){
   state.config.themeColor = hex;
   applyTheme(hex);
   await saveState();
+  syncPublicBranding();
   render();
+}
+
+/* ---- Dados públicos da tela de login (nome da loja, cor do tema, fotos
+   laterais) ----
+   Todo o resto dos dados do app (produtos, vendas, caixa etc.) fica no
+   documento pdv/pdv-state, que só pode ser lido depois de logar — e por
+   isso a tela de login não tinha como saber o nome da loja ou mostrar as
+   fotos configuradas: ela aparece ANTES do login. Este pequeno documento
+   separado (pdv_meta/branding) guarda só essas informações de marca — nada
+   sensível (nenhuma venda, produto ou dado do caixa) — e as regras do
+   Firestore precisam permitir leitura dele sem estar logado. */
+async function loadPublicBranding(){
+  if(!fbAvailable || !fbDb) return;
+  try{
+    const doc = await withTimeout(fbDb.collection('pdv_meta').doc('branding').get(), 6000);
+    if(doc.exists){
+      const b = doc.data() || {};
+      if(b.storeName) state.config.storeName = b.storeName;
+      if(b.loginPhotoLeft) state.config.loginPhotoLeft = b.loginPhotoLeft;
+      if(b.loginPhotoRight) state.config.loginPhotoRight = b.loginPhotoRight;
+      if(b.themeColor){ state.config.themeColor = b.themeColor; applyTheme(b.themeColor); }
+    }
+  }catch(e){
+    // Não bloqueia o login por isso — só a marca (nome/fotos/cor) fica no
+    // padrão até a próxima tentativa.
+    console.error('Não foi possível carregar o nome/fotos da loja para a tela de login', e);
+  }
+  if(!currentUser){ try{ renderAuthScreen(); }catch(e){} }
+}
+/* Chamado sempre que o administrador muda nome da loja, cor do tema ou as
+   fotos laterais do login — mantém o documento público em sincronia. */
+async function syncPublicBranding(){
+  if(!fbAvailable || !fbDb) return;
+  try{
+    await fbDb.collection('pdv_meta').doc('branding').set({
+      storeName: state.config.storeName || 'Minha Loja',
+      loginPhotoLeft: state.config.loginPhotoLeft || null,
+      loginPhotoRight: state.config.loginPhotoRight || null,
+      themeColor: state.config.themeColor || '#8A6D46',
+      updatedAt: Date.now()
+    });
+  }catch(e){
+    console.error('Não foi possível atualizar o nome/fotos públicos da tela de login', e);
+  }
 }
 
 let creatingAccountGuard = false; // evita corrida entre criar conta manualmente e o disparo automático do login
@@ -963,7 +1008,9 @@ async function loadState(){
   if(fbAvailable && window.firebase && firebase.auth){
     // Com o Firebase disponível, o login passa a ser via Firebase Authentication.
     // As regras do Firestore agora exigem estar autenticado, então só carregamos
-    // os dados do app DEPOIS que o login for confirmado.
+    // os dados do app DEPOIS que o login for confirmado — exceto o nome/fotos/cor
+    // da loja, que vêm do documento público pdv_meta/branding (ver acima).
+    loadPublicBranding();
     firebase.auth().onAuthStateChanged((user)=>{
       if(creatingAccountGuard) return; // estamos no meio de uma criação manual de conta
       if(user) handleFirebaseSignedIn(user);
@@ -1023,6 +1070,10 @@ async function handleFirebaseSignedIn(user){
   try{ renderAuthScreen(); }catch(e){ console.error('Erro ao mostrar tela de login', e); }
   try{ watchRemoteChanges(); }catch(e){ console.error('Erro ao iniciar sincronização em tempo real', e); }
   try{ startPresenceHeartbeat(); recomputeOfflineReserve(); syncPendingOfflineOps(); }catch(e){ console.error('Erro ao iniciar reserva de estoque offline', e); }
+  // Autocorreção: garante que o documento público de marca (nome/fotos/cor
+  // da tela de login) exista e esteja atualizado, mesmo que essas
+  // configurações já tivessem sido salvas antes desse recurso existir.
+  try{ syncPublicBranding(); }catch(e){}
 }
 async function loadLocalOnlyState(){
   const defaultConfig = { ...state.config };
@@ -3807,6 +3858,7 @@ async function saveConfig(){
     printerWidth: document.getElementById('c_printerWidth').value,
   };
   const ok = await saveState();
+  syncPublicBranding();
   render();
   if(ok) alert('Configurações salvas!');
 }
@@ -3823,6 +3875,7 @@ async function handleLoginPhotoSelect(evt, key){
     const dataUrl = await processCutoutPhoto(file, 640);
     state.config[key] = dataUrl;
     const ok = await saveState();
+    syncPublicBranding();
     render();
     if(!ok) alert('⚠️ Não foi possível salvar a foto (armazenamento cheio). Tente uma imagem menor.');
   }catch(e){
@@ -3832,6 +3885,7 @@ async function handleLoginPhotoSelect(evt, key){
 async function removeLoginPhoto(key){
   state.config[key] = null;
   await saveState();
+  syncPublicBranding();
   render();
 }
 function wipeData(){
