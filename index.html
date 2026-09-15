@@ -246,6 +246,27 @@
      cortado, mantendo sempre um envelope de tamanho consistente. */
   .auth-wrap{ width:100%; display:flex; justify-content:center; }
   .auth-side-photo{ display:none; }
+
+  /* Celular: as duas fotos aparecem lado a lado, em tamanho reduzido, acima
+     do card de login (em vez de escondidas como antes). O card continua
+     centralizado normalmente logo abaixo. */
+  @media (max-width:859px){
+    #authScreen{ align-items:flex-start; overflow-y:auto; padding:20px 16px; }
+    .auth-wrap{
+      display:grid; grid-template-columns:1fr 1fr;
+      grid-template-areas:"left right" "card card";
+      gap:8px 14px; max-width:360px; margin:0 auto;
+    }
+    .auth-side-photo{ display:flex; }
+    .auth-side-photo.auth-side-left{ grid-area:left; justify-content:flex-end; }
+    .auth-side-photo.auth-side-right{ grid-area:right; justify-content:flex-start; }
+    .auth-card{ grid-area:card; }
+    .auth-side-photo img{
+      display:block; width:96px; height:130px; object-fit:contain; object-position:bottom;
+      filter:drop-shadow(0 6px 10px rgba(0,0,0,.3));
+    }
+  }
+
   @media (min-width:860px){
     .auth-wrap{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:32px; max-width:1200px; margin:0 auto; }
     .auth-side-photo{ display:flex; align-items:center; height:100%; }
