@@ -1589,148 +1589,125 @@ function renderCartReview(){
   renderCartBar();
 }
 
-/* ---- Pagamento ---- */
+/* ---- Pagamento ----
+   Fluxo único: o vendedor escolhe uma forma de pagamento e já aparece um
+   campo pra digitar o valor pago por aquele meio (começa preenchido com o
+   valor total restante). Se ele digitar um valor MENOR que o restante,
+   ao confirmar esse valor entra automaticamente como pagamento parcial e o
+   menu de formas de pagamento reaparece pra escolher o complemento — sem
+   precisar de nenhum botão extra de "dividir pagamento". */
 let selectedPayment = null;
 const PAY_METHODS = ['Dinheiro','Débito','Crédito','Pix'];
 function openPaymentModal(){
   if(!cart.length) return;
   selectedPayment = null;
-  window._splitMode = false;
   window._splitPayments = [];
-  window._splitSelectedMethod = null;
   showModal(renderPaymentModalContent());
+}
+function paymentRemaining(){
+  const total = cartTotal();
+  const paidSoFar = window._splitPayments.reduce((a,p)=>a+p.amount,0);
+  return +(total - paidSoFar).toFixed(2);
 }
 function renderPaymentModalContent(){
   const total = cartTotal();
-  if(!window._splitMode){
-    return `
-      <h3>Forma de pagamento</h3>
-      <div class="muted small">Total a receber</div>
-      <div style="font-size:26px;font-weight:800;color:var(--primary);margin-bottom:6px;">${fmt(total)}</div>
-      <div class="pay-grid" id="payGrid">
-        ${PAY_METHODS.map(p=>`<button class="pay-chip ${selectedPayment===p?'selected':''}" onclick="selectPayment('${p}')" id="pc-${p}">${p}</button>`).join('')}
-      </div>
-      <div id="cashCalc">${selectedPayment==='Dinheiro' ? cashCalcHtml() : ''}</div>
-      <button class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;" onclick="toggleSplitMode(true)">➗ Dividir em mais de uma forma de pagamento</button>
-      <div class="btn-row" style="margin-top:16px;">
-        <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
-        <button class="btn btn-primary" id="confirmPayBtn" ${selectedPayment && selectedPayment!=='Dinheiro' ? '' : 'disabled'} onclick="confirmSale()">Confirmar venda</button>
-      </div>
-    `;
-  }
-  // ---- modo dividido ----
-  const paidSoFar = window._splitPayments.reduce((a,p)=>a+p.amount,0);
-  const remaining = +(total - paidSoFar).toFixed(2);
+  const remaining = paymentRemaining();
+  const hasPartial = window._splitPayments.length>0;
   return `
-    <h3>Dividir pagamento</h3>
+    <h3>Forma de pagamento</h3>
     <div class="muted small">Total a receber</div>
-    <div style="font-size:22px;font-weight:800;color:var(--primary);margin-bottom:10px;">${fmt(total)}</div>
-    ${window._splitPayments.length ? `<div class="card" style="margin-bottom:10px;">
-      ${window._splitPayments.map((p,i)=>`
-        <div class="row" style="padding:6px 0;">
-          <span>${p.method}</span>
-          <span style="font-weight:700;display:flex;align-items:center;gap:8px;">${fmt(p.amount)} <button class="icon-btn" onclick="removeSplitPayment(${i})">✕</button></span>
-        </div>`).join('')}
-    </div>` : ''}
-    <div class="row" style="margin-bottom:14px;">
-      <span class="muted small">${remaining>0.004 ? 'Falta receber' : 'Tudo pago'}</span>
-      <span style="font-weight:800; color:${remaining>0.004?'var(--danger)':'var(--success)'};">${fmt(Math.abs(remaining))}</span>
-    </div>
-    ${remaining>0.004 ? `
-    <label>Forma de pagamento</label>
-    <div class="pay-grid">
-      ${PAY_METHODS.map(p=>`<button class="pay-chip ${window._splitSelectedMethod===p?'selected':''}" onclick="selectSplitMethod('${p}')">${p}</button>`).join('')}
-    </div>
-    <label>Valor</label>
-    <input type="text" inputmode="decimal" id="splitAmountInput" placeholder="0,00" value="${remaining.toFixed(2).replace('.',',')}">
-    <button class="btn btn-ghost" style="margin-top:10px;width:100%;" onclick="addSplitPayment()">+ Adicionar</button>
+    <div style="font-size:26px;font-weight:800;color:var(--primary);margin-bottom:6px;">${fmt(total)}</div>
+    ${hasPartial ? `
+      <div class="card" style="margin-bottom:10px;">
+        ${window._splitPayments.map((p,i)=>`
+          <div class="row" style="padding:6px 0;">
+            <span>${p.method}</span>
+            <span style="font-weight:700;display:flex;align-items:center;gap:8px;">${fmt(p.amount)} <button class="icon-btn" onclick="removeSplitPayment(${i})">✕</button></span>
+          </div>`).join('')}
+        <div class="row" style="padding-top:8px;border-top:1px solid var(--border);margin-top:4px;">
+          <span class="muted small" style="font-weight:700;">Falta receber</span>
+          <span style="font-weight:800;color:var(--danger);">${fmt(remaining)}</span>
+        </div>
+      </div>
     ` : ''}
-    <button class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;" onclick="toggleSplitMode(false)">Voltar para forma única</button>
+    <div class="pay-grid" id="payGrid">
+      ${PAY_METHODS.map(p=>`<button class="pay-chip ${selectedPayment===p?'selected':''}" onclick="selectPayment('${p}')" id="pc-${p}">${p}</button>`).join('')}
+    </div>
+    <div id="paymentAmountArea">${selectedPayment ? paymentAmountHtml(remaining) : ''}</div>
     <div class="btn-row" style="margin-top:16px;">
       <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
-      <button class="btn btn-primary" ${remaining<=0.004 ? '' : 'disabled'} onclick="confirmSaleSplit()">Confirmar venda</button>
+      <button class="btn btn-primary" id="confirmPayBtn" ${selectedPayment ? '' : 'disabled'} onclick="confirmPaymentStep()">${hasPartial ? 'Adicionar' : 'Confirmar venda'}</button>
     </div>
   `;
 }
-function cashCalcHtml(){
+function paymentAmountHtml(remaining){
+  const isCash = selectedPayment==='Dinheiro';
+  const defaultVal = remaining>0 ? remaining.toFixed(2).replace('.',',') : '';
   return `
-    <label>Valor recebido</label>
-    <input type="text" inputmode="decimal" id="cashReceived" placeholder="0,00" oninput="calcTroco()">
-    <div class="row" style="margin-top:8px;"><span class="muted small">Troco</span><span id="trocoVal" style="font-weight:800;">R$ 0,00</span></div>
-    <div id="cashError" class="small" style="color:var(--danger); margin-top:6px; display:none;">O valor recebido é menor que o total da venda.</div>
+    <label>Valor pago em ${selectedPayment}</label>
+    <input type="text" inputmode="decimal" id="paymentAmountInput" placeholder="0,00" value="${defaultVal}" oninput="onPaymentAmountInput()">
+    ${isCash ? `<div class="row" style="margin-top:8px;"><span class="muted small">Troco</span><span id="trocoVal" style="font-weight:800;">R$ 0,00</span></div>` : ''}
+    <div id="paymentAmountHint" class="small muted" style="margin-top:6px;"></div>
+    <div id="paymentAmountError" class="small" style="color:var(--danger); margin-top:6px; display:none;"></div>
   `;
 }
 function selectPayment(p){
   selectedPayment = p;
   showModal(renderPaymentModalContent());
 }
-function calcTroco(){
-  const recv = readMoneyInput('cashReceived');
-  const total = cartTotal();
-  const troco = recv - total;
+function onPaymentAmountInput(){
+  const remaining = paymentRemaining();
+  const amount = readMoneyInput('paymentAmountInput');
+  const isCash = selectedPayment==='Dinheiro';
   const trocoEl = document.getElementById('trocoVal');
-  if(trocoEl) trocoEl.textContent = fmt(Math.max(troco,0));
-  const err = document.getElementById('cashError');
+  if(trocoEl) trocoEl.textContent = fmt(Math.max(amount-remaining,0));
+  const tooMuch = !isCash && amount > remaining + 0.005;
+  const err = document.getElementById('paymentAmountError');
+  if(err){
+    err.style.display = tooMuch ? 'block' : 'none';
+    err.textContent = tooMuch ? `Esse valor é maior que o restante. ${selectedPayment} não tem troco.` : '';
+  }
+  const hint = document.getElementById('paymentAmountHint');
+  if(hint){
+    hint.textContent = (!tooMuch && amount>0 && amount + 0.005 < remaining)
+      ? `Faltará ${fmt(remaining-amount)} — escolha outra forma de pagamento para completar.`
+      : '';
+  }
   const btn = document.getElementById('confirmPayBtn');
-  const ok = recv >= total;
-  if(err) err.style.display = ok ? 'none' : 'block';
-  if(btn) btn.disabled = !ok;
+  if(btn){
+    btn.disabled = tooMuch || amount<=0;
+    btn.textContent = (amount + 0.005 >= remaining) ? 'Confirmar venda' : 'Adicionar';
+  }
 }
-function toggleSplitMode(on){
-  window._splitMode = on;
-  window._splitPayments = window._splitPayments || [];
-  window._splitSelectedMethod = null;
-  selectedPayment = null;
-  showModal(renderPaymentModalContent());
-}
-function selectSplitMethod(p){
-  window._splitSelectedMethod = p;
-  showModal(renderPaymentModalContent());
-}
-function addSplitPayment(){
-  const method = window._splitSelectedMethod;
-  if(!method){ alert('Escolha a forma de pagamento.'); return; }
-  const amount = readMoneyInput('splitAmountInput');
+function confirmPaymentStep(){
+  const remaining = paymentRemaining();
+  const amount = readMoneyInput('paymentAmountInput');
   if(amount<=0){ alert('Informe um valor válido.'); return; }
-  const total = cartTotal();
-  const paidSoFar = window._splitPayments.reduce((a,p)=>a+p.amount,0);
-  const remaining = total - paidSoFar;
-  if(method!=='Dinheiro' && amount > remaining + 0.005){
-    alert('Esse valor é maior que o restante a pagar. Cartão e Pix não têm troco, então o valor não pode passar do que ainda falta.');
+  const isCash = selectedPayment==='Dinheiro';
+  if(!isCash && amount > remaining + 0.005){
+    alert(`Esse valor é maior que o restante a pagar. ${selectedPayment} não tem troco, então o valor não pode passar do que ainda falta.`);
     return;
   }
-  window._splitPayments.push({ method, amount });
-  window._splitSelectedMethod = null;
-  showModal(renderPaymentModalContent());
+  window._splitPayments.push({ method: selectedPayment, amount });
+  selectedPayment = null;
+  if(paymentRemaining() <= 0.004){
+    confirmSale();
+  } else {
+    // Ainda falta parte do valor: volta pro menu de formas de pagamento,
+    // já mostrando quanto falta, pra escolher o complemento.
+    showModal(renderPaymentModalContent());
+  }
 }
 function removeSplitPayment(i){
   window._splitPayments.splice(i,1);
   showModal(renderPaymentModalContent());
 }
 async function confirmSale(){
-  if(!selectedPayment || !cart.length) return;
   const total = cartTotal();
-  let received=null, troco=0;
-  if(selectedPayment==='Dinheiro'){
-    received = readMoneyInput('cashReceived');
-    if(received < total){ alert('O valor recebido é menor que o total da venda.'); return; }
-    troco = received - total;
-  }
-  const sale = {
-    id: uid(), date: new Date().toISOString(),
-    items: cart.map(c=>({...c})), total,
-    payments: [{ method: selectedPayment, amount: total }],
-    payment: selectedPayment,
-    received, troco, cancelled:false, exchanges:[]
-  };
-  await finalizeSale(sale);
-}
-async function confirmSaleSplit(){
-  const total = cartTotal();
-  const paidSoFar = window._splitPayments.reduce((a,p)=>a+p.amount,0);
-  if(paidSoFar + 0.005 < total){ alert('Ainda falta receber parte do pagamento.'); return; }
-  const troco = +(paidSoFar - total).toFixed(2);
   const payments = window._splitPayments.map(p=>({...p}));
+  if(!payments.length) return;
+  const paidTotal = payments.reduce((a,p)=>a+p.amount,0);
+  const troco = Math.max(+(paidTotal - total).toFixed(2), 0);
   const cashReceivedTotal = payments.filter(p=>p.method==='Dinheiro').reduce((a,p)=>a+p.amount,0);
   const sale = {
     id: uid(), date: new Date().toISOString(),
