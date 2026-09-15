@@ -239,8 +239,11 @@
   .auth-logo svg{width:28px; height:28px;}
 
   /* Fotos laterais da tela de login — só aparecem em telas largas, onde
-     sobra espaço vazio dos dois lados do card. Tamanho e proporção sempre
-     fixos (recorte automático via object-fit), não importa a foto enviada. */
+     sobra espaço vazio dos dois lados do card. O fundo da foto é removido
+     automaticamente no envio (ver removeBackgroundToTransparent), então a
+     imagem é exibida "recortada" (sem caixa/moldura), flutuando sobre a cor
+     de fundo do app. object-fit:contain garante que nada da imagem seja
+     cortado, mantendo sempre um envelope de tamanho consistente. */
   .auth-wrap{ width:100%; display:flex; justify-content:center; }
   .auth-side-photo{ display:none; }
   @media (min-width:860px){
@@ -249,8 +252,8 @@
     .auth-side-photo.auth-side-left{ justify-content:flex-end; }
     .auth-side-photo.auth-side-right{ justify-content:flex-start; }
     .auth-side-photo img{
-      display:block; width:220px; height:320px; object-fit:cover; object-position:center;
-      border-radius:20px; box-shadow:0 16px 40px rgba(0,0,0,.28);
+      display:block; width:220px; height:340px; object-fit:contain; object-position:center;
+      filter:drop-shadow(0 10px 18px rgba(0,0,0,.35));
     }
   }
 
@@ -2395,6 +2398,152 @@ function resizeImageToDataUrl(file, maxDim, quality){
     reader.readAsDataURL(file);
   });
 }
+/* Remove automaticamente um fundo claro/uniforme (branco, cinza-claro,
+   quadriculado de transparência etc.) de uma imagem, deixando-o transparente.
+   Funciona "de fora pra dentro": primeiro aprende a cor do fundo a partir
+   dos próprios pixels da borda da imagem, depois espalha por pixels
+   vizinhos que batem com essa paleta (preenchimento por inundação) — só
+   apaga o fundo que está realmente conectado à borda, então uma cor parecida
+   no meio da imagem (ex.: roupa clara do santo/santa) não é afetada, pois
+   não está "grudada" na borda. Cada candidato é comparado sempre com a
+   paleta de fundo (não com o vizinho anterior), o que evita que o
+   preenchimento "vaze" por uma linha de contorno fina e acabe apagando uma
+   área colorida do outro lado dela.
+   É uma remoção simples e best effort, priorizando nunca danificar o
+   assunto da foto: funciona bem para fotos com fundo liso/claro (o caso
+   comum de imagens de santos, logos etc.), mas pode deixar um resquício de
+   fundo em bolsões pequenos totalmente cercados por contorno (ex.: dentro
+   de uma coroa desenhada), e não substitui uma ferramenta de recorte
+   profissional para fotos complexas. */
+function removeBackgroundToTransparent(canvas, tolerance){
+  tolerance = tolerance || 34;
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width, h = canvas.height;
+  if(w<2 || h<2) return;
+  const imgData = ctx.getImageData(0,0,w,h);
+  const data = imgData.data;
+  const total = w*h;
+  const visited = new Uint8Array(total);
+  const thresh2 = tolerance*tolerance;
+  const stack = new Int32Array(total);
+  let sp = 0;
+  // Paleta de cores de fundo (até 24 tons claros/neutros distintos): em vez de
+  // comparar cada pixel com o vizinho anterior (o que deixaria a "cor de
+  // referência" derivar aos poucos até alcançar cores bem diferentes — como
+  // costura por uma linha fina de contorno antialiasada até dentro do
+  // desenho colorido), todo pixel candidato é comparado com essa paleta
+  // ESTÁVEL, aprendida a partir da borda da imagem. Isso evita que o
+  // preenchimento "vaze" por uma linha fina e continue apagando uma área
+  // sólida colorida do outro lado dela.
+  const palette = [];
+  const maxPaletteEntries = 24;
+  const paletteMinDist2 = 18*18;
+  const addToPalette = (r,g,b)=>{
+    if(palette.length>=maxPaletteEntries) return;
+    // só aceita tons claros e neutros (branco/cinza-claro do fundo/quadriculado) —
+    // evita contaminar a paleta com cores de antialiasing/borda do desenho,
+    // que fariam o preenchimento (e a etapa 2) apagar partes coloridas da imagem.
+    const maxc = Math.max(r,g,b), minc = Math.min(r,g,b);
+    const avg = (r+g+b)/3;
+    if(avg < 150 || (maxc-minc) > 34) return;
+    for(let p=0;p<palette.length;p++){
+      const dr=palette[p][0]-r, dg=palette[p][1]-g, db=palette[p][2]-b;
+      if((dr*dr+dg*dg+db*db) <= paletteMinDist2) return;
+    }
+    palette.push([r,g,b]);
+  };
+  const bestDist2ToPalette = (r,g,b)=>{
+    let best = Infinity;
+    for(let p=0;p<palette.length;p++){
+      const dr=palette[p][0]-r, dg=palette[p][1]-g, db=palette[p][2]-b;
+      const d2 = dr*dr+dg*dg+db*db;
+      if(d2<best) best=d2;
+    }
+    return best;
+  };
+  // 1) Aprende a paleta de fundo a partir dos pixels da própria borda da
+  // imagem (moldura ao redor do assunto — o caso normal de uma foto com
+  // fundo liso/quadriculado).
+  for(let x=0;x<w;x++){
+    let o=(0*w+x)*4; addToPalette(data[o],data[o+1],data[o+2]);
+    o=((h-1)*w+x)*4; addToPalette(data[o],data[o+1],data[o+2]);
+  }
+  for(let y=0;y<h;y++){
+    let o=(y*w+0)*4; addToPalette(data[o],data[o+1],data[o+2]);
+    o=(y*w+(w-1))*4; addToPalette(data[o],data[o+1],data[o+2]);
+  }
+  if(!palette.length) return; // borda não parece ter fundo claro — não mexe na imagem
+  // 2) Sementes: pixels de borda que batem com a paleta. Se o assunto da
+  // foto encostar na borda da imagem (ex.: um ombro cortado bem na margem),
+  // ele não bate com a paleta clara e não vira semente — não arrasta o
+  // resto do assunto junto ao apagar o fundo.
+  const pushIfMatch = (x,y)=>{
+    const i = y*w+x;
+    if(visited[i]) return;
+    const o = i*4;
+    if(bestDist2ToPalette(data[o],data[o+1],data[o+2]) <= thresh2){
+      visited[i]=1; stack[sp++]=i;
+    }
+  };
+  for(let x=0;x<w;x++){ pushIfMatch(x,0); pushIfMatch(x,h-1); }
+  for(let y=0;y<h;y++){ pushIfMatch(0,y); pushIfMatch(w-1,y); }
+  // 3) Preenchimento por inundação: só espalha para vizinhos que também
+  // batem com a paleta estável (não com o pixel vizinho anterior).
+  while(sp>0){
+    const i = stack[--sp];
+    const x = i % w, y = (i / w) | 0;
+    const o = i*4;
+    data[o+3] = 0; // torna este pixel transparente
+    const nb = [
+      x>0 ? i-1 : -1, x<w-1 ? i+1 : -1,
+      y>0 ? i-w : -1, y<h-1 ? i+w : -1
+    ];
+    for(let k=0;k<4;k++){
+      const ni = nb[k];
+      if(ni<0 || visited[ni]) continue;
+      const no = ni*4;
+      const r = data[no], g = data[no+1], b = data[no+2];
+      if(bestDist2ToPalette(r,g,b) <= thresh2){
+        visited[ni]=1;
+        stack[sp++]=ni;
+      }
+    }
+  }
+  // Observação: de propósito NÃO existe uma segunda etapa tentando apagar
+  // "ilhas" de fundo cercadas por contorno (ex.: um pedacinho de
+  // quadriculado dentro de uma coroa desenhada) — testes mostraram que
+  // qualquer critério simples pra isso também acaba apagando pedaços da
+  // própria imagem quando ela tem áreas claras divididas por linhas finas
+  // (ex.: uma roupa branca cortada por um desenho). Ou seja: pode sobrar um
+  // pouco de fundo em bolsões bem pequenos e cercados, mas a imagem original
+  // nunca é danificada — a prioridade aqui é nunca apagar parte do assunto.
+  ctx.putImageData(imgData,0,0);
+}
+/* Carrega a imagem, redimensiona e remove o fundo — usado nas fotos
+   laterais da tela de login. Sempre exporta em PNG (o formato precisa
+   suportar transparência; JPEG não suporta). */
+function processCutoutPhoto(file, maxDim){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = ()=>{
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = ()=>{
+        let w = img.width, h = img.height;
+        if(w > h && w > maxDim){ h = Math.round(h*maxDim/w); w = maxDim; }
+        else if(h >= w && h > maxDim){ w = Math.round(w*maxDim/h); h = maxDim; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        removeBackgroundToTransparent(canvas);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
 function cameraIcon(){
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`;
 }
@@ -3301,11 +3450,11 @@ function renderConfig(){
     </div>
     <h2 class="section-title">Fotos da tela de login</h2>
     <div class="card">
-      <div class="small muted" style="margin-bottom:12px;">Aparecem nas laterais da tela de login, em telas grandes (computador/tablet) — no celular não há espaço vazio, então elas ficam ocultas. A foto é sempre recortada automaticamente no mesmo tamanho e proporção, não importa o formato da imagem enviada.</div>
+      <div class="small muted" style="margin-bottom:12px;">Aparecem nas laterais da tela de login, em telas grandes (computador/tablet) — no celular não há espaço vazio, então elas ficam ocultas. O fundo da foto (branco, cinza-claro, quadriculado etc.) é removido automaticamente ao enviar, deixando só a imagem recortada, sempre no mesmo tamanho.</div>
       <label>Foto do lado esquerdo</label>
       <div class="photo-upload">
         <div class="photo-preview-box" id="loginPhotoLeftPreview" style="width:70px;height:102px;">
-          ${c.loginPhotoLeft ? `<img src="${c.loginPhotoLeft}">` : cameraIcon()}
+          ${c.loginPhotoLeft ? `<img src="${c.loginPhotoLeft}" style="object-fit:contain;">` : cameraIcon()}
         </div>
         <div class="photo-upload-actions">
           <label class="photo-btn" for="loginPhotoLeftInput">📷 ${c.loginPhotoLeft ? 'Trocar foto' : 'Adicionar foto'}</label>
@@ -3316,7 +3465,7 @@ function renderConfig(){
       <label style="margin-top:16px;">Foto do lado direito</label>
       <div class="photo-upload">
         <div class="photo-preview-box" id="loginPhotoRightPreview" style="width:70px;height:102px;">
-          ${c.loginPhotoRight ? `<img src="${c.loginPhotoRight}">` : cameraIcon()}
+          ${c.loginPhotoRight ? `<img src="${c.loginPhotoRight}" style="object-fit:contain;">` : cameraIcon()}
         </div>
         <div class="photo-upload-actions">
           <label class="photo-btn" for="loginPhotoRightInput">📷 ${c.loginPhotoRight ? 'Trocar foto' : 'Adicionar foto'}</label>
@@ -3662,15 +3811,16 @@ async function saveConfig(){
   if(ok) alert('Configurações salvas!');
 }
 /* ---- Fotos laterais da tela de login ----
-   Guarda a imagem redimensionada (mesma técnica das fotos de produto), sem
-   recortar no envio — o recorte final (tamanho/proporção sempre iguais) é
-   feito na exibição via CSS (object-fit:cover), então qualquer foto enviada
-   fica visualmente padronizada. */
+   O fundo (branco, cinza-claro, quadriculado etc.) é removido
+   automaticamente ao enviar a foto, deixando só a imagem "recortada" —
+   assim ela fica flutuando sobre a cor do app, sem caixa nem fundo visível.
+   O tamanho de exibição continua sempre o mesmo (ver CSS .auth-side-photo),
+   não importa a proporção da foto original. */
 async function handleLoginPhotoSelect(evt, key){
   const file = evt.target.files && evt.target.files[0];
   if(!file) return;
   try{
-    const dataUrl = await resizeImageToDataUrl(file, 640, 0.7);
+    const dataUrl = await processCutoutPhoto(file, 640);
     state.config[key] = dataUrl;
     const ok = await saveState();
     render();
