@@ -974,6 +974,8 @@ async function handleFirebaseSignedIn(user){
     }
     userProfile = profileDoc.data();
     currentUser = { id:user.uid, username:user.email, role:userProfile.role, _authMode:'firebase' };
+    _adminExists = true;
+    ensureSetupFlag();
   }catch(e){
     console.error('Não foi possível carregar seu perfil de acesso', e);
     render();
@@ -1132,6 +1134,19 @@ async function checkAdminExists(){
   }catch(e){
     _adminExists = true;
   }
+}
+/* Garante que exista o documento pdv_meta/setup assim que um admin de verdade
+   loga — é esse "carimbo" que as regras de segurança do Firestore usam pra
+   saber que o sistema já foi configurado e bloquear qualquer novo
+   autocadastro a partir daí (mesmo que alguém tente pular a tela e chamar o
+   Firebase direto). Best-effort: se falhar, não afeta o login nem mais nada. */
+function ensureSetupFlag(){
+  if(!fbAvailable || !fbDb) return;
+  fbDb.collection('pdv_meta').doc('setup').get().then(snap=>{
+    if(!snap.exists){
+      fbDb.collection('pdv_meta').doc('setup').set({ initializedAt: Date.now() }).catch(()=>{});
+    }
+  }).catch(()=>{});
 }
 function renderAuthScreen(){
   const box = document.getElementById('authScreen');
