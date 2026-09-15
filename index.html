@@ -1120,12 +1120,30 @@ async function retryCloudLoad(){
   cloudFetchFailed = false;
   await loadState();
 }
+/* Controla se o botão "Criar conta de administrador" pode aparecer no login.
+   null = ainda não checamos; true = já existe pelo menos 1 admin (esconde o
+   botão); false = sistema novo, sem nenhum usuário ainda (permite o 1º cadastro).
+   Por segurança, qualquer erro na checagem assume "true" (esconde o botão). */
+let _adminExists = null;
+async function checkAdminExists(){
+  try{
+    const snap = await withTimeout(fbDb.collection('pdv_users').limit(1).get(), 6000);
+    _adminExists = !snap.empty;
+  }catch(e){
+    _adminExists = true;
+  }
+}
 function renderAuthScreen(){
   const box = document.getElementById('authScreen');
   if(fbAvailable && window.firebase && firebase.auth){
     if(currentUser){ box.style.display = 'none'; updateAppbar(); return; }
     box.style.display = 'flex';
     box.innerHTML = window._showFirstAdminSetup ? renderFirebaseSetupAdmin() : renderFirebaseLogin();
+    if(_adminExists===null){
+      checkAdminExists().then(()=>{
+        if(!currentUser && !window._showFirstAdminSetup) renderAuthScreen();
+      });
+    }
     updateAppbar();
     return;
   }
@@ -1159,7 +1177,7 @@ function renderFirebaseLogin(){
       <div id="loginError" class="small" style="color:var(--danger); margin-top:6px;"></div>
       <button class="btn btn-primary" style="margin-top:16px;" onclick="doFirebaseLogin()">Entrar</button>
       <button class="btn btn-outline btn-sm" style="margin-top:10px; width:100%;" onclick="doForgotPassword()">Esqueci minha senha</button>
-      <button class="btn btn-ghost btn-sm" style="margin-top:6px; width:100%;" onclick="window._showFirstAdminSetup=true; renderAuthScreen();">Primeira vez? Criar conta de administrador</button>
+      ${_adminExists===false ? `<button class="btn btn-ghost btn-sm" style="margin-top:6px; width:100%;" onclick="window._showFirstAdminSetup=true; renderAuthScreen();">Primeira vez? Criar conta de administrador</button>` : ''}
     </div>
   `;
 }
@@ -1191,6 +1209,17 @@ async function createFirebaseAdminAccount(){
   if(pass!==pass2){ err.textContent = 'As senhas não coincidem.'; err.style.display='block'; return; }
   creatingAccountGuard = true;
   try{
+    // Checagem de segurança feita na hora, não só ao abrir a tela: se já existe
+    // algum administrador, recusa — a única forma de criar acesso a partir daqui
+    // é o administrador atual cadastrando em Configuração → Usuários.
+    const existing = await withTimeout(fbDb.collection('pdv_users').limit(1).get(), 6000);
+    if(!existing.empty){
+      _adminExists = true;
+      creatingAccountGuard = false;
+      err.textContent = 'Já existe um administrador cadastrado. Peça pra ele criar seu acesso em Configuração → Usuários.';
+      err.style.display = 'block';
+      return;
+    }
     const cred = await firebase.auth().createUserWithEmailAndPassword(email, pass);
     await fbDb.collection('pdv_users').doc(cred.user.uid).set({ email, role:'admin', createdAt: Date.now() });
     creatingAccountGuard = false;
