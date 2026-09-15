@@ -59,6 +59,8 @@
   #offlineBanner .dot{width:7px;height:7px;border-radius:50%;background:var(--danger); flex:none; animation:offlinePulse 1.4s infinite;}
   @keyframes offlinePulse{0%,100%{opacity:1;}50%{opacity:.35;}}
   .reserve-note{font-size:11px; font-weight:700; color:var(--danger);}
+  .pwd-toggle{display:flex; align-items:center; gap:6px; font-size:12px; color:var(--muted); margin:6px 0 0; cursor:pointer; user-select:none;}
+  .pwd-toggle input{margin:0; width:auto;}
 
   /* ---------- Views ---------- */
   #view{flex:1; padding:14px 14px calc(var(--nav-h) + 20px); overflow-y:auto;}
@@ -1127,6 +1129,10 @@ function renderAuthScreen(){
   updateAppbar();
 }
 /* ---- Login via Firebase Authentication (modo padrão, com internet) ---- */
+function togglePasswordVisibility(checkbox, ...ids){
+  const type = checkbox.checked ? 'text' : 'password';
+  ids.forEach(id=>{ const el = document.getElementById(id); if(el) el.type = type; });
+}
 function renderFirebaseLogin(){
   return `
     <div class="auth-card">
@@ -1137,6 +1143,7 @@ function renderFirebaseLogin(){
       <input id="login_email" type="email" autocomplete="off">
       <label>Senha</label>
       <input id="login_pass" type="password" onkeydown="if(event.key==='Enter') doFirebaseLogin();">
+      <label class="pwd-toggle"><input type="checkbox" onchange="togglePasswordVisibility(this,'login_pass')"> Mostrar senha</label>
       <div id="loginError" class="small" style="color:var(--danger); margin-top:6px;"></div>
       <button class="btn btn-primary" style="margin-top:16px;" onclick="doFirebaseLogin()">Entrar</button>
       <button class="btn btn-outline btn-sm" style="margin-top:10px; width:100%;" onclick="doForgotPassword()">Esqueci minha senha</button>
@@ -1156,6 +1163,7 @@ function renderFirebaseSetupAdmin(){
       <input id="setup_pass" type="password" placeholder="mínimo 6 caracteres">
       <label>Confirmar senha</label>
       <input id="setup_pass2" type="password">
+      <label class="pwd-toggle"><input type="checkbox" onchange="togglePasswordVisibility(this,'setup_pass','setup_pass2')"> Mostrar senha</label>
       <div id="setupError" class="small" style="color:var(--danger); margin-top:6px;"></div>
       <button class="btn btn-primary" style="margin-top:16px;" onclick="createFirebaseAdminAccount()">Criar conta e entrar</button>
       <button class="btn btn-ghost btn-sm" style="margin-top:10px; width:100%;" onclick="window._showFirstAdminSetup=false; renderAuthScreen();">Já tenho conta, voltar pro login</button>
@@ -1229,6 +1237,7 @@ function renderLocalSetupAdmin(){
       <input id="setup_pass" type="password" placeholder="mínimo 4 caracteres">
       <label>Confirmar senha</label>
       <input id="setup_pass2" type="password">
+      <label class="pwd-toggle"><input type="checkbox" onchange="togglePasswordVisibility(this,'setup_pass','setup_pass2')"> Mostrar senha</label>
       <div id="setupError" class="small" style="color:var(--danger); margin-top:6px;"></div>
       <button class="btn btn-primary" style="margin-top:16px;" onclick="createLocalAdminAccount()">Criar conta e entrar</button>
     </div>
@@ -1260,6 +1269,7 @@ function renderLocalLogin(){
       <input id="login_user" autocomplete="off" placeholder="admin">
       <label>Senha</label>
       <input id="login_pass" type="password" onkeydown="if(event.key==='Enter') doLocalLogin();">
+      <label class="pwd-toggle"><input type="checkbox" onchange="togglePasswordVisibility(this,'login_pass')"> Mostrar senha</label>
       <div id="loginError" class="small" style="color:var(--danger); margin-top:6px;"></div>
       <button class="btn btn-primary" style="margin-top:16px;" onclick="doLocalLogin()">Entrar</button>
     </div>
@@ -3330,6 +3340,7 @@ function handleRestoreFile(evt){
       <p class="small">Isso vai <b>substituir todos os dados atuais</b> (produtos, vendas, usuários) pelos do arquivo selecionado. Não tem como desfazer depois.</p>
       <label>Digite sua senha de administrador para confirmar</label>
       <input type="password" id="restoreAdminPass" placeholder="Sua senha">
+      <label class="pwd-toggle"><input type="checkbox" onchange="togglePasswordVisibility(this,'restoreAdminPass')"> Mostrar senha</label>
       <div id="restoreError" class="small" style="color:var(--danger); margin-top:6px; display:none;"></div>
       <div class="btn-row" style="margin-top:16px;">
         <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
@@ -3429,6 +3440,7 @@ function openFirebaseUserForm(){
     <input id="nu_pass" type="password" placeholder="mínimo 6 caracteres">
     <label>Confirmar senha</label>
     <input id="nu_pass2" type="password">
+    <label class="pwd-toggle"><input type="checkbox" onchange="togglePasswordVisibility(this,'nu_pass','nu_pass2')"> Mostrar senha</label>
     <label>Tipo de acesso</label>
     <select id="nu_role">
       <option value="comum">Usuário comum (sem acesso à Configuração)</option>
@@ -3491,6 +3503,7 @@ function openLocalUserForm(){
     <input id="nu_pass" type="password" placeholder="mínimo 4 caracteres">
     <label>Confirmar senha</label>
     <input id="nu_pass2" type="password">
+    <label class="pwd-toggle"><input type="checkbox" onchange="togglePasswordVisibility(this,'nu_pass','nu_pass2')"> Mostrar senha</label>
     <label>Tipo de acesso</label>
     <select id="nu_role">
       <option value="comum">Usuário comum (sem acesso à Configuração)</option>
@@ -3560,6 +3573,7 @@ function wipeData(){
     <p class="small muted">Os usuários cadastrados não serão apagados.</p>
     <label>Digite sua senha de administrador para confirmar</label>
     <input type="password" id="wipeAdminPass" placeholder="Sua senha">
+    <label class="pwd-toggle"><input type="checkbox" onchange="togglePasswordVisibility(this,'wipeAdminPass')"> Mostrar senha</label>
     <div id="wipeError" class="small" style="color:var(--danger); margin-top:6px; display:none;">Senha incorreta.</div>
     <div class="btn-row" style="margin-top:16px;">
       <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
