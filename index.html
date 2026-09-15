@@ -49,6 +49,17 @@
   #appbar .status.closed .dot{background:#FFB4A6;}
   #appbar .status.closed{background:rgba(255,107,74,.25);}
 
+  /* ---------- Reserva de estoque offline ---------- */
+  #offlineBanner{
+    display:none; align-items:center; gap:8px; padding:8px 14px;
+    background:var(--danger-light); color:var(--danger); font-size:12px; font-weight:700;
+    border-bottom:1px solid rgba(229,72,77,.2);
+  }
+  #offlineBanner.show{display:flex;}
+  #offlineBanner .dot{width:7px;height:7px;border-radius:50%;background:var(--danger); flex:none; animation:offlinePulse 1.4s infinite;}
+  @keyframes offlinePulse{0%,100%{opacity:1;}50%{opacity:.35;}}
+  .reserve-note{font-size:11px; font-weight:700; color:var(--danger);}
+
   /* ---------- Views ---------- */
   #view{flex:1; padding:14px 14px calc(var(--nav-h) + 20px); overflow-y:auto;}
   h2.section-title{font-size:14px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin:18px 2px 10px; font-weight:700;}
@@ -307,6 +318,8 @@
     </div>
   </div>
 
+  <div id="offlineBanner"><span class="dot"></span><span id="offlineBannerText">Sem conexão — vendendo com estoque reservado</span></div>
+
   <div id="view"></div>
 
   <div id="cartBar">
@@ -475,6 +488,7 @@ async function storageGet(key){
     try{
       const doc = await withTimeout(fbDb.collection('pdv').doc(key).get(), 4000);
       cloudFetchFailed = false;
+      markOnline();
       if(doc.exists && doc.data().value){
         const val = doc.data().value;
         try{ localStorage.setItem(key, val); }catch(e){}
@@ -484,6 +498,7 @@ async function storageGet(key){
     }catch(e){
       console.error('Firestore indisponível ou demorou demais — NÃO vou tratar isso como "banco vazio" pra não arriscar apagar dados reais.', e);
       cloudFetchFailed = true;
+      markOffline();
       return undefined; // sinaliza "não sei", diferente de null ("sei que está vazio")
     }
   }
@@ -499,8 +514,9 @@ async function storageSet(key, value){
     try{
       await withTimeout(fbDb.collection('pdv').doc(key).set({ value, updatedAt: Date.now() }), 4000);
       ok = true;
+      markOnline();
       saveDailyBackup(value); // best-effort, não bloqueia nem afeta o salvamento principal
-    }catch(e){ console.error('Não foi possível salvar no Firestore (ou demorou demais)', e); }
+    }catch(e){ console.error('Não foi possível salvar no Firestore (ou demorou demais)', e); markOffline(); }
   }
   try{ localStorage.setItem(key, value); ok = true; }catch(e){ /* ignora */ }
   if(!ok && window.storage){
@@ -577,10 +593,12 @@ async function runStateTransaction(mutatorFn){
     }), 8000);
     try{ localStorage.setItem('pdv-state', JSON.stringify(state)); }catch(e){}
     saveDailyBackup(JSON.stringify(state));
+    markOnline();
     render();
     return true;
   }catch(e){
     console.error('Não foi possível confirmar essa alteração de forma sincronizada com o servidor', e);
+    markOffline();
     alert('⚠️ Não foi possível confirmar essa alteração com o servidor agora (conexão instável). Ela foi aplicada só neste aparelho — pode não estar sincronizada com os outros até a conexão melhorar.');
     mutatorFn(state);
     await saveState();
@@ -588,6 +606,293 @@ async function runStateTransaction(mutatorFn){
     return false;
   }
 }
+
+/* ============================================================
+   RESERVA DE ESTOQUE OFFLINE
+   ------------------------------------------------------------
+   Objetivo: se a conexão cair com mais de um operador usando o
+   app, ninguém deve vender mais do que a "fatia" de estoque que
+   sobrou pra ele. Enquanto online, o app fica de olho em quantos
+   operadores estão ativos (via um "sinal de presença" no
+   Firestore) e recalcula, pra cada produto com controle de
+   estoque, quanto CADA operador poderia vender com segurança se a
+   conexão caísse agora (estoque total / nº de operadores ativos).
+
+   No instante em que a conexão cai de verdade, essa última conta
+   é "congelada" neste aparelho: a partir daí, o limite de venda de
+   cada produto passa a ser essa cota (menos o que já foi vendido
+   offline), em vez do estoque total — assim dois operadores
+   offline ao mesmo tempo não conseguem vender a mesma unidade duas
+   vezes. As vendas feitas nesse período ficam guardadas numa fila
+   local e, quando a conexão volta, são reaplicadas uma a uma em
+   cima do estoque mais atual do servidor (mesma transação seguraa
+   já usada online), recalculando tudo de forma segura. Se ainda
+   assim dois aparelhos conseguirem vender mais do que existia (ex.:
+   um operador não estava com o app aberto pra contar na divisão), o
+   estoque nunca fica negativo e a diferença é registrada em
+   state.stockConflicts pra o admin revisar depois. */
+function getDeviceId(){
+  let id = null;
+  try{ id = localStorage.getItem('pdv-device-id'); }catch(e){}
+  if(!id){ id = uid(); try{ localStorage.setItem('pdv-device-id', id); }catch(e){} }
+  return id;
+}
+const DEVICE_ID = getDeviceId();
+let appIsOnline = (typeof navigator==='undefined' || navigator.onLine!==false);
+let offlineReserve = {};       // { productId: quantidade reservada pra ESTE aparelho }
+let offlineReserveMeta = { computedAt:null, operatorsCount:1 };
+let offlineSoldSinceOffline = {}; // { productId: quantidade já vendida offline desde que a conexão caiu }
+let presenceOperators = {};    // { deviceId: {name, lastSeen} } — snapshot dos operadores ativos
+let presenceTimer = null, presenceUnsub = null;
+const PRESENCE_TTL_MS = 40000; // considera "offline" quem não manda sinal há mais de 40s
+
+try{
+  const cachedReserve = JSON.parse(localStorage.getItem('pdv-offline-reserve') || 'null');
+  if(cachedReserve){ offlineReserve = cachedReserve.reserve || {}; offlineReserveMeta = cachedReserve.meta || offlineReserveMeta; }
+  const cachedSold = JSON.parse(localStorage.getItem('pdv-offline-sold') || 'null');
+  if(cachedSold) offlineSoldSinceOffline = cachedSold;
+}catch(e){}
+
+function persistOfflineReserveCache(){
+  try{ localStorage.setItem('pdv-offline-reserve', JSON.stringify({ reserve: offlineReserve, meta: offlineReserveMeta })); }catch(e){}
+  try{ localStorage.setItem('pdv-offline-sold', JSON.stringify(offlineSoldSinceOffline)); }catch(e){}
+}
+
+function activeOperatorsCount(){
+  const now = Date.now();
+  const n = Object.values(presenceOperators).filter(p=> (now - p.lastSeen) < PRESENCE_TTL_MS).length;
+  return Math.max(n, 1);
+}
+
+/* Enquanto online, mantém a "fatia" de cada produto sempre atualizada —
+   assim, se a conexão cair de repente, já existe um número pronto pra usar. */
+function recomputeOfflineReserve(){
+  if(!appIsOnline || !fbAvailable) return;
+  const n = activeOperatorsCount();
+  const reserve = {};
+  (state.products||[]).forEach(p=>{
+    if(typeof p.stock === 'number') reserve[p.id] = Math.floor(Math.max(0,p.stock) / n);
+  });
+  offlineReserve = reserve;
+  offlineReserveMeta = { computedAt: Date.now(), operatorsCount: n };
+  offlineSoldSinceOffline = {}; // enquanto online não há "venda offline pendente"
+  persistOfflineReserveCache();
+  updateOfflineBanner();
+}
+
+function startPresenceHeartbeat(){
+  if(!fbAvailable || presenceTimer) return;
+  const beat = ()=>{
+    if(!appIsOnline) return;
+    fbDb.collection('pdv_presence').doc(DEVICE_ID).set({
+      name: (currentUser && (currentUser.username || currentUser.name)) || 'Operador',
+      lastSeen: Date.now()
+    }).then(()=> markOnline()).catch(()=> markOffline());
+  };
+  beat();
+  presenceTimer = setInterval(beat, 15000);
+  if(!presenceUnsub){
+    presenceUnsub = fbDb.collection('pdv_presence').onSnapshot(snap=>{
+      const ops = {};
+      snap.forEach(doc=> ops[doc.id] = doc.data());
+      presenceOperators = ops;
+      recomputeOfflineReserve();
+    }, ()=>{});
+  }
+}
+function stopPresenceHeartbeat(){
+  if(presenceTimer){ clearInterval(presenceTimer); presenceTimer = null; }
+  if(presenceUnsub){ presenceUnsub(); presenceUnsub = null; }
+  if(fbAvailable && fbDb){ fbDb.collection('pdv_presence').doc(DEVICE_ID).delete().catch(()=>{}); }
+}
+
+/* Quantidade que ESTE aparelho ainda pode vender de um produto sem risco de
+   conflito. Só entra em ação quando offline e já existe uma reserva calculada;
+   fora disso, devolve null e quem chamou usa o estoque normal. */
+function remainingOfflineReserve(productId){
+  if(appIsOnline) return null;
+  if(!offlineReserveMeta.computedAt) return null; // nunca chegou a calcular (ex.: nunca esteve online) — sem base pra limitar
+  const reserved = offlineReserve[productId];
+  if(typeof reserved !== 'number') return null;
+  const sold = offlineSoldSinceOffline[productId] || 0;
+  return Math.max(0, reserved - sold);
+}
+function consumeOfflineReserve(productId, qty){
+  offlineSoldSinceOffline[productId] = (offlineSoldSinceOffline[productId]||0) + qty;
+  persistOfflineReserveCache();
+}
+
+/* ---- Fila de operações feitas offline (venda, cancelamento, troca), pra
+   reaplicar com segurança quando a conexão voltar ---- */
+function getPendingOfflineOps(){
+  try{ return JSON.parse(localStorage.getItem('pdv-pending-ops')||'[]'); }catch(e){ return []; }
+}
+function setPendingOfflineOps(list){
+  try{ localStorage.setItem('pdv-pending-ops', JSON.stringify(list)); }catch(e){}
+}
+function queueOfflineOp(type, payload){
+  const list = getPendingOfflineOps();
+  list.push({ id: uid(), type, payload, deviceId: DEVICE_ID, queuedAt: Date.now() });
+  setPendingOfflineOps(list);
+}
+function removePendingOfflineOp(opId){
+  setPendingOfflineOps(getPendingOfflineOps().filter(e=>e.id!==opId));
+}
+function recordStockConflict(s, productName, deficit){
+  if(!s.stockConflicts) s.stockConflicts = [];
+  s.stockConflicts.push({ id: uid(), productName, deficit, date: Date.now(), deviceId: DEVICE_ID });
+}
+/* Aplica os efeitos de uma venda (numeração de ticket + baixa de estoque) num
+   dado estado — usada tanto na hora da venda quanto ao reaplicar vendas que
+   ficaram pendentes de quando o aparelho estava offline. */
+function applySaleMutation(s, sale, opts){
+  opts = opts || {};
+  let nextTicket = Math.max(s.ticketCounter || 0, TICKET_START) + 1;
+  sale.items.forEach(it=>{
+    if(opts.reconciling && it.ticketStart) return; // já numerado da primeira vez, não renumera
+    it.ticketStart = nextTicket;
+    nextTicket += it.qty;
+  });
+  s.ticketCounter = Math.max(s.ticketCounter||0, nextTicket - 1);
+  s.sales.push(sale);
+  sale.items.forEach(it=>{
+    const p = s.products.find(x=>x.id===it.productId);
+    if(p && typeof p.stock==='number'){
+      const deficit = it.qty - p.stock;
+      if(opts.reconciling && deficit > 0) recordStockConflict(s, p.name, deficit);
+      p.stock = Math.max(0, p.stock - it.qty);
+    }
+  });
+}
+/* Cancela uma venda (devolve o estoque, marca cancelada). Sempre seguro de
+   reaplicar mais de uma vez: se já estava cancelada, não faz nada de novo. */
+function applyCancelMutation(s, saleId){
+  const sale = s.sales.find(x=>x.id===saleId);
+  if(!sale || sale.cancelled) return false;
+  sale.items.forEach(it=>{
+    const p = s.products.find(x=>x.id===it.productId);
+    if(p && typeof p.stock==='number') p.stock += it.qty;
+  });
+  sale.cancelled = true;
+  sale.cancelledAt = new Date().toISOString();
+  return true;
+}
+/* Troca um item de uma venda por outro(s), pelo número do ticket. Devolve
+   {notFound} ou {notFound:false, diff, printableNewItems} — igual faça a
+   troca na hora ou reaplicando depois de ter ficado offline. */
+function applyTrocaMutation(s, ticketNum, cartSnapshot, opts){
+  opts = opts || {};
+  const found = findTicketOwnerIn(s, ticketNum);
+  if(!found){
+    // Ao reaplicar (reconciliando após ficar offline), "não achei o ticket"
+    // pode significar que outro aparelho já trocou ou cancelou esse mesmo
+    // ticket enquanto ambos estavam offline — registra pra o admin revisar,
+    // em vez de simplesmente descartar essa troca em silêncio.
+    if(opts.reconciling) recordStockConflict(s, `Troca do ticket ${ticketNum}`, 0);
+    return { notFound:true };
+  }
+  const { sale, itemIndex } = found;
+  const oldItem = sale.items[itemIndex];
+
+  const oldProduct = s.products.find(p=>p.id===oldItem.productId);
+  if(oldProduct && typeof oldProduct.stock==='number') oldProduct.stock += 1;
+  const oldSubtotal = oldItem.price;
+  const oldItemName = oldItem.name;
+  oldItem.qty -= 1;
+  if(oldItem.qty<=0) sale.items.splice(itemIndex,1);
+
+  let nextTicket = Math.max(s.ticketCounter || 0, TICKET_START) + 1;
+  const printableNewItems = [];
+  cartSnapshot.forEach(c=>{
+    const np = s.products.find(p=>p.id===c.productId);
+    if(np && typeof np.stock==='number'){
+      const deficit = c.qty - np.stock;
+      if(opts.reconciling && deficit > 0) recordStockConflict(s, np.name, deficit);
+      np.stock = Math.max(0, np.stock - c.qty);
+    }
+    sale.items.push({ productId:c.productId, name:c.name, price:c.price, qty:c.qty, ticketStart: nextTicket });
+    printableNewItems.push({ name:c.name, price:c.price, qty:c.qty, ticketStart: nextTicket });
+    nextTicket += c.qty;
+  });
+  s.ticketCounter = Math.max(s.ticketCounter||0, nextTicket - 1);
+
+  const newItemsTotal = cartSnapshot.reduce((a,c)=>a+c.price*c.qty,0);
+  const diff = newItemsTotal - oldSubtotal;
+
+  sale.total = sale.items.reduce((a,it)=>a+it.price*it.qty,0);
+  sale.exchanges = sale.exchanges || [];
+  sale.exchanges.push({
+    date: new Date().toISOString(),
+    from: { name: oldItemName, qty:1, ticket: ticketNum },
+    to: cartSnapshot.map(c=>({ name:c.name, qty:c.qty })),
+    diff
+  });
+
+  return { notFound:false, diff, printableNewItems };
+}
+/* Reaplica, uma a uma, as operações feitas neste aparelho enquanto estava
+   offline (vendas, cancelamentos, trocas) — cada uma em cima do estado MAIS
+   ATUAL do servidor (a mesma transação segura usada quando online), pra
+   recalcular o estoque real de forma correta assim que a conexão volta. */
+let syncingOfflineOps = false;
+async function syncPendingOfflineOps(){
+  if(syncingOfflineOps || !fbAvailable || !appIsOnline) return;
+  const pending = getPendingOfflineOps().filter(e=>e.deviceId===DEVICE_ID);
+  if(!pending.length) return;
+  syncingOfflineOps = true;
+  try{
+    for(const entry of pending){
+      let ok;
+      if(entry.type==='sale'){
+        ok = await runStateTransaction(s=> applySaleMutation(s, entry.payload, {reconciling:true}));
+      } else if(entry.type==='cancel'){
+        ok = await runStateTransaction(s=> applyCancelMutation(s, entry.payload.saleId));
+      } else if(entry.type==='troca'){
+        ok = await runStateTransaction(s=> applyTrocaMutation(s, entry.payload.ticketNum, entry.payload.cartSnapshot, {reconciling:true}));
+      } else { ok = true; } // tipo desconhecido: descarta em vez de travar a fila pra sempre
+      if(!ok) break; // ainda sem conexão de verdade — tenta o resto depois
+      removePendingOfflineOp(entry.id);
+    }
+  } finally {
+    syncingOfflineOps = false;
+    recomputeOfflineReserve();
+    if(state.stockConflicts && state.stockConflicts.length) await saveState();
+  }
+}
+
+function updateOfflineBanner(){
+  const el = document.getElementById('offlineBanner');
+  if(!el) return;
+  if(appIsOnline || !fbAvailable){ el.classList.remove('show'); return; }
+  const txt = document.getElementById('offlineBannerText');
+  if(txt){
+    const n = offlineReserveMeta.operatorsCount || 1;
+    txt.textContent = offlineReserveMeta.computedAt
+      ? `Sem conexão — dividindo estoque entre ${n} operador${n>1?'es':''}. Você só pode vender sua reserva até a conexão voltar.`
+      : 'Sem conexão — não foi possível calcular a reserva de estoque ainda. Venda com atenção.';
+  }
+  el.classList.add('show');
+}
+
+function markOnline(){
+  const was = appIsOnline;
+  appIsOnline = true;
+  if(!was){
+    updateOfflineBanner();
+    if(fbAvailable){ startPresenceHeartbeat(); syncPendingOfflineOps(); recomputeOfflineReserve(); }
+  }
+}
+function markOffline(){
+  const was = appIsOnline;
+  appIsOnline = false;
+  if(was) persistOfflineReserveCache(); // congela a última reserva calculada
+  updateOfflineBanner();
+}
+if(typeof window!=='undefined'){
+  window.addEventListener('online', markOnline);
+  window.addEventListener('offline', markOffline);
+}
+
 /* Hash da senha padrão de fábrica (Zv8n90x2@@), pré-calculado — o texto puro
    nunca fica no código, só o hash. Usado para criar a conta "admin" padrão
    automaticamente quando o app roda pela primeira vez em um dispositivo. */
@@ -682,6 +987,7 @@ async function handleFirebaseSignedIn(user){
   try{ render(); }catch(e){ console.error('Erro ao renderizar o app', e); }
   try{ renderAuthScreen(); }catch(e){ console.error('Erro ao mostrar tela de login', e); }
   try{ watchRemoteChanges(); }catch(e){ console.error('Erro ao iniciar sincronização em tempo real', e); }
+  try{ startPresenceHeartbeat(); recomputeOfflineReserve(); syncPendingOfflineOps(); }catch(e){ console.error('Erro ao iniciar reserva de estoque offline', e); }
 }
 async function loadLocalOnlyState(){
   const defaultConfig = { ...state.config };
@@ -742,6 +1048,7 @@ document.getElementById('modalOverlay').addEventListener('click', e=>{ if(e.targ
 
 function updateAppbar(){
   document.getElementById('storeTitle').textContent = state.config.storeName || 'PDV Fácil';
+  updateOfflineBanner();
   const el = document.getElementById('cashStatus');
   const txt = document.getElementById('cashStatusText');
   if(state.cash.isOpen){ el.classList.remove('closed'); txt.textContent='Caixa aberto'; }
@@ -982,6 +1289,7 @@ function confirmLogout(){
 }
 async function doLogout(){
   closeModal();
+  stopPresenceHeartbeat();
   if(fbAvailable && window.firebase && firebase.auth && firebase.auth().currentUser){
     await firebase.auth().signOut();
   } else {
@@ -1042,7 +1350,7 @@ function renderVenda(){
       <div class="ptext">
         <div class="pname">${escapeHtml(p.name)}</div>
         <div class="pprice">${fmt(p.price)}</div>
-        <div class="pstock">${p.stock!=null && p.stock<=0 ? '<span style="color:var(--accent);font-weight:700;">Sem estoque</span>' : 'Estoque: '+(p.stock ?? '-')}</div>
+        <div class="pstock">${stockLabel(p)}</div>
       </div>
     </button>`;
 
@@ -1088,7 +1396,19 @@ function renderCartItem(it, i){
 function maxQtyForProduct(p){
   if(!p) return 1;
   if(p.alwaysAvailable || p.stock==null) return Infinity;
+  const reserve = remainingOfflineReserve(p.id);
+  if(reserve!==null) return Math.min(reserve, Math.max(0, p.stock));
   return Math.max(0, p.stock);
+}
+/* Texto de estoque exibido nos cards de produto — mostra também a reserva
+   offline (a fatia que só ESTE aparelho pode vender agora) quando a conexão
+   está caída e o produto tem controle de estoque. */
+function stockLabel(p){
+  if(p.stock!=null && p.stock<=0) return '<span style="color:var(--accent);font-weight:700;">Sem estoque</span>';
+  let label = 'Estoque: '+(p.stock ?? '-');
+  const reserve = typeof p.stock==='number' ? remainingOfflineReserve(p.id) : null;
+  if(reserve!==null) label += ` <span class="reserve-note">(sua reserva: ${reserve})</span>`;
+  return label;
 }
 function openQtyModal(pid){
   const p = state.products.find(x=>x.id===pid);
@@ -1402,23 +1722,27 @@ async function confirmSaleSplit(){
   await finalizeSale(sale);
 }
 async function finalizeSale(sale){
-  await runStateTransaction((s)=>{
-    // atribui o número de ticket em cima do contador MAIS RECENTE do servidor,
-    // evitando que dois aparelhos deem o mesmo número numa venda simultânea
-    let nextTicket = Math.max(s.ticketCounter || 0, TICKET_START) + 1;
-    sale.items.forEach(it=>{
-      it.ticketStart = nextTicket;
-      nextTicket += it.qty;
-    });
-    s.ticketCounter = nextTicket - 1;
-
-    s.sales.push(sale);
-    // baixa de estoque em cima do estoque mais recente (não da cópia local)
-    sale.items.forEach(it=>{
-      const p = s.products.find(x=>x.id===it.productId);
-      if(p && typeof p.stock==='number') p.stock = Math.max(0, p.stock - it.qty);
-    });
-  });
+  let ok;
+  if(!appIsOnline && fbAvailable){
+    // Já sabemos que está offline: nem tenta esperar o servidor (evita travar
+    // a venda por vários segundos). Aplica direto aqui — o limite já foi
+    // garantido lá no carrinho por maxQtyForProduct — e marca pra reaplicar
+    // com segurança assim que a conexão voltar.
+    applySaleMutation(state, sale);
+    await saveState();
+    ok = false;
+  } else {
+    // atribui o número de ticket e baixa o estoque em cima do estado MAIS
+    // RECENTE do servidor, evitando que dois aparelhos deem o mesmo número
+    // ou vendam a mesma unidade numa venda simultânea
+    ok = await runStateTransaction((s)=> applySaleMutation(s, sale));
+  }
+  if(!ok && fbAvailable){
+    // não confirmado com o servidor (offline ou conexão caiu no meio da
+    // venda): guarda numa fila local pra reconciliar quando a conexão voltar
+    sale.items.forEach(it=> consumeOfflineReserve(it.productId, it.qty));
+    queueOfflineOp('sale', sale);
+  }
   lastReceipt = sale;
   cart = [];
   closeModal();
@@ -2614,16 +2938,29 @@ function confirmCancelSale(saleId){
 }
 async function executeCancelSale(saleId){
   let found = true;
-  await runStateTransaction((s)=>{
-    const sale = s.sales.find(x=>x.id===saleId);
-    if(!sale || sale.cancelled){ found = false; return; }
-    sale.items.forEach(it=>{
-      const p = s.products.find(x=>x.id===it.productId);
-      if(p && typeof p.stock==='number') p.stock += it.qty;
-    });
-    sale.cancelled = true;
-    sale.cancelledAt = new Date().toISOString();
-  });
+  let ok;
+  if(!appIsOnline && fbAvailable){
+    found = applyCancelMutation(state, saleId);
+    if(found) await saveState();
+    ok = false; // não tentado com o servidor agora — evita travar a tela esperando
+  } else {
+    ok = await runStateTransaction((s)=>{ found = applyCancelMutation(s, saleId); });
+  }
+  if(found && !ok && fbAvailable){
+    const pendingOps = getPendingOfflineOps();
+    const queuedSale = pendingOps.find(e=> e.deviceId===DEVICE_ID && e.type==='sale' && e.payload.id===saleId);
+    if(queuedSale){
+      // essa venda nem chegou a sair daqui (ainda estava só na fila local) —
+      // cancelar é só tirar ela da fila, sem sentido avisar o servidor de uma
+      // venda que ele nunca chegou a saber que existiu
+      removePendingOfflineOp(queuedSale.id);
+      const qtyByProduct = {};
+      queuedSale.payload.items.forEach(it=> qtyByProduct[it.productId]=(qtyByProduct[it.productId]||0)+it.qty);
+      Object.entries(qtyByProduct).forEach(([pid,qty])=> consumeOfflineReserve(pid, -qty));
+    } else {
+      queueOfflineOp('cancel', { saleId });
+    }
+  }
   closeModal();
   if(!found) alert('Essa venda já estava cancelada (talvez por outro aparelho).');
 }
@@ -2674,7 +3011,7 @@ function renderTroca(){
       <div class="ptext">
         <div class="pname">${escapeHtml(p.name)}</div>
         <div class="pprice">${fmt(p.price)}</div>
-        <div class="pstock">${p.stock!=null && p.stock<=0 ? '<span style="color:var(--accent);font-weight:700;">Sem estoque</span>' : 'Estoque: '+(p.stock ?? '-')}</div>
+        <div class="pstock">${stockLabel(p)}</div>
       </div>
     </button>`;
 
@@ -2742,6 +3079,11 @@ function addToTrocaCart(pid){
   const p = state.products.find(x=>x.id===pid);
   if(!p) return;
   const existing = window._troca.cart.find(c=>c.productId===pid);
+  const max = maxQtyForProduct(p);
+  if((existing?existing.qty:0) >= max){
+    if(!appIsOnline) alert('Sua reserva offline pra este produto já foi totalmente usada.');
+    return;
+  }
   if(existing) existing.qty++;
   else window._troca.cart.push({ productId:pid, name:p.name, price:p.price, qty:1 });
   render();
@@ -2762,53 +3104,26 @@ async function finalizeTroca(){
   const ticketNum = t.ticketNum;
   const cartSnapshot = t.cart.map(c=>({...c}));
 
-  let txResult = null;
-  await runStateTransaction((s)=>{
-    const found = findTicketOwnerIn(s, ticketNum);
-    if(!found){ txResult = { notFound:true }; return; }
-    const { sale, itemIndex } = found;
-    const oldItem = sale.items[itemIndex];
-
-    // devolve a unidade antiga ao estoque
-    const oldProduct = s.products.find(p=>p.id===oldItem.productId);
-    if(oldProduct && typeof oldProduct.stock==='number') oldProduct.stock += 1;
-    const oldSubtotal = oldItem.price;
-    const oldItemName = oldItem.name;
-    oldItem.qty -= 1;
-    if(oldItem.qty<=0) sale.items.splice(itemIndex,1);
-
-    // adiciona os novos itens escolhidos, cada um SEMPRE com seu próprio
-    // número de ticket novo, calculado em cima do contador mais recente
-    let nextTicket = Math.max(s.ticketCounter || 0, TICKET_START) + 1;
-    const printableNewItems = [];
-    cartSnapshot.forEach(c=>{
-      const np = s.products.find(p=>p.id===c.productId);
-      if(np && typeof np.stock==='number') np.stock = Math.max(0, np.stock - c.qty);
-      sale.items.push({ productId:c.productId, name:c.name, price:c.price, qty:c.qty, ticketStart: nextTicket });
-      printableNewItems.push({ name:c.name, price:c.price, qty:c.qty, ticketStart: nextTicket });
-      nextTicket += c.qty;
-    });
-    s.ticketCounter = nextTicket - 1;
-
-    const newItemsTotal = cartSnapshot.reduce((a,c)=>a+c.price*c.qty,0);
-    const diff = newItemsTotal - oldSubtotal;
-
-    sale.total = sale.items.reduce((a,it)=>a+it.price*it.qty,0);
-    sale.exchanges = sale.exchanges || [];
-    sale.exchanges.push({
-      date: new Date().toISOString(),
-      from: { name: oldItemName, qty:1, ticket: ticketNum },
-      to: cartSnapshot.map(c=>({ name:c.name, qty:c.qty })),
-      diff
-    });
-
-    txResult = { notFound:false, diff, printableNewItems };
-  });
+  let txResult, ok;
+  if(!appIsOnline && fbAvailable){
+    // Já sabemos que está offline: aplica direto aqui (o limite dos itens
+    // novos já foi garantido em addToTrocaCart) e marca pra reaplicar quando
+    // a conexão voltar, em vez de esperar o servidor sem necessidade.
+    txResult = applyTrocaMutation(state, ticketNum, cartSnapshot);
+    if(!txResult.notFound) await saveState();
+    ok = false;
+  } else {
+    ok = await runStateTransaction((s)=>{ txResult = applyTrocaMutation(s, ticketNum, cartSnapshot); });
+  }
 
   if(!txResult || txResult.notFound){
     alert('Este ticket não está mais disponível (pode já ter sido alterado em outro aparelho). Busque de novo.');
     resetTroca();
     return;
+  }
+  if(!ok && fbAvailable){
+    cartSnapshot.forEach(c=> consumeOfflineReserve(c.productId, c.qty));
+    queueOfflineOp('troca', { ticketNum, cartSnapshot });
   }
 
   const diff = txResult.diff;
@@ -2860,6 +3175,9 @@ function buildTrocaStubsText(items, dateStr){
 /* ============================================================
    CONFIGURAÇÃO
 ============================================================ */
+async function clearStockConflicts(){
+  await runStateTransaction((s)=>{ s.stockConflicts = []; });
+}
 function renderConfig(){
   const c = state.config;
   const currentColor = c.themeColor || '#8A6D46';
@@ -2874,7 +3192,22 @@ function renderConfig(){
     { name:'Rosa', hex:'#B5527A' },
   ];
   const isCustomColor = !themePresets.some(t=>t.hex.toLowerCase()===currentColor.toLowerCase());
+  const conflicts = state.stockConflicts || [];
+  const conflictsHtml = conflicts.length ? `
+    <h2 class="section-title">⚠️ Conflitos de estoque</h2>
+    <div class="card">
+      <div class="small muted" style="margin-bottom:10px;">Aconteceram quando vendas ou trocas offline de aparelhos diferentes não puderam ser reconciliadas automaticamente com segurança (ex.: passaram do estoque disponível, ou mexeram no mesmo ticket ao mesmo tempo). O estoque nunca fica negativo, mas vale conferir cada caso.</div>
+      ${conflicts.slice().reverse().map(cf=>`
+        <div class="row" style="padding:8px 0; border-bottom:1px solid var(--border);">
+          <span>${escapeHtml(cf.productName)}${cf.deficit>0 ? ` — vendido ${cf.deficit} a mais que o estoque` : ' — não foi possível reaplicar automaticamente, confira manualmente'}</span>
+          <span class="small muted">${new Date(cf.date).toLocaleString('pt-BR')}</span>
+        </div>
+      `).join('')}
+      <button class="btn btn-outline" style="margin-top:10px;" onclick="clearStockConflicts()">Marcar como revisado</button>
+    </div>
+  ` : '';
   return `
+    ${conflictsHtml}
     <h2 class="section-title">Cor do tema</h2>
     <div class="card">
       <div class="theme-swatch-grid">
