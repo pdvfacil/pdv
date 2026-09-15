@@ -238,6 +238,22 @@
   .auth-logo{width:56px; height:56px; border-radius:16px; background:var(--primary); display:flex; align-items:center; justify-content:center; margin:0 auto 16px; color:#fff;}
   .auth-logo svg{width:28px; height:28px;}
 
+  /* Fotos laterais da tela de login — só aparecem em telas largas, onde
+     sobra espaço vazio dos dois lados do card. Tamanho e proporção sempre
+     fixos (recorte automático via object-fit), não importa a foto enviada. */
+  .auth-wrap{ width:100%; display:flex; justify-content:center; }
+  .auth-side-photo{ display:none; }
+  @media (min-width:860px){
+    .auth-wrap{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:32px; max-width:1200px; margin:0 auto; }
+    .auth-side-photo{ display:flex; align-items:center; height:100%; }
+    .auth-side-photo.auth-side-left{ justify-content:flex-end; }
+    .auth-side-photo.auth-side-right{ justify-content:flex-start; }
+    .auth-side-photo img{
+      display:block; width:220px; height:320px; object-fit:cover; object-position:center;
+      border-radius:20px; box-shadow:0 16px 40px rgba(0,0,0,.28);
+    }
+  }
+
   .modal-overlay{
     position:fixed; inset:0; background:rgba(10,20,20,.5); display:none;
     align-items:flex-end; justify-content:center; z-index:50;
@@ -1148,12 +1164,25 @@ function ensureSetupFlag(){
     }
   }).catch(()=>{});
 }
+/* Envolve o card de login/cadastro com as fotos laterais configuradas em
+   Configuração → Fotos da tela de login (se houver). Em telas estreitas
+   (celular) as fotos ficam ocultas via CSS — não há espaço vazio lá. */
+function authScreenWrapper(cardHtml){
+  const c = state.config || {};
+  return `
+    <div class="auth-wrap">
+      <div class="auth-side-photo auth-side-left">${c.loginPhotoLeft ? `<img src="${c.loginPhotoLeft}" alt="">` : ''}</div>
+      ${cardHtml}
+      <div class="auth-side-photo auth-side-right">${c.loginPhotoRight ? `<img src="${c.loginPhotoRight}" alt="">` : ''}</div>
+    </div>
+  `;
+}
 function renderAuthScreen(){
   const box = document.getElementById('authScreen');
   if(fbAvailable && window.firebase && firebase.auth){
     if(currentUser){ box.style.display = 'none'; updateAppbar(); return; }
     box.style.display = 'flex';
-    box.innerHTML = window._showFirstAdminSetup ? renderFirebaseSetupAdmin() : renderFirebaseLogin();
+    box.innerHTML = authScreenWrapper(window._showFirstAdminSetup ? renderFirebaseSetupAdmin() : renderFirebaseLogin());
     if(_adminExists===null){
       checkAdminExists().then(()=>{
         if(!currentUser && !window._showFirstAdminSetup) renderAuthScreen();
@@ -1164,10 +1193,10 @@ function renderAuthScreen(){
   }
   if(!state.users || state.users.length===0){
     box.style.display = 'flex';
-    box.innerHTML = renderLocalSetupAdmin();
+    box.innerHTML = authScreenWrapper(renderLocalSetupAdmin());
   } else if(!currentUser){
     box.style.display = 'flex';
-    box.innerHTML = renderLocalLogin();
+    box.innerHTML = authScreenWrapper(renderLocalLogin());
   } else {
     box.style.display = 'none';
   }
@@ -3270,6 +3299,32 @@ function renderConfig(){
       </div>
       <div class="small muted" style="margin-top:10px;">Toque num quadrado pra aplicar na hora. O último ícone permite escolher qualquer cor personalizada.</div>
     </div>
+    <h2 class="section-title">Fotos da tela de login</h2>
+    <div class="card">
+      <div class="small muted" style="margin-bottom:12px;">Aparecem nas laterais da tela de login, em telas grandes (computador/tablet) — no celular não há espaço vazio, então elas ficam ocultas. A foto é sempre recortada automaticamente no mesmo tamanho e proporção, não importa o formato da imagem enviada.</div>
+      <label>Foto do lado esquerdo</label>
+      <div class="photo-upload">
+        <div class="photo-preview-box" id="loginPhotoLeftPreview" style="width:70px;height:102px;">
+          ${c.loginPhotoLeft ? `<img src="${c.loginPhotoLeft}">` : cameraIcon()}
+        </div>
+        <div class="photo-upload-actions">
+          <label class="photo-btn" for="loginPhotoLeftInput">📷 ${c.loginPhotoLeft ? 'Trocar foto' : 'Adicionar foto'}</label>
+          <input type="file" id="loginPhotoLeftInput" accept="image/*" onchange="handleLoginPhotoSelect(event,'loginPhotoLeft')">
+          ${c.loginPhotoLeft ? `<button type="button" class="photo-remove-btn" onclick="removeLoginPhoto('loginPhotoLeft')">Remover foto</button>` : ''}
+        </div>
+      </div>
+      <label style="margin-top:16px;">Foto do lado direito</label>
+      <div class="photo-upload">
+        <div class="photo-preview-box" id="loginPhotoRightPreview" style="width:70px;height:102px;">
+          ${c.loginPhotoRight ? `<img src="${c.loginPhotoRight}">` : cameraIcon()}
+        </div>
+        <div class="photo-upload-actions">
+          <label class="photo-btn" for="loginPhotoRightInput">📷 ${c.loginPhotoRight ? 'Trocar foto' : 'Adicionar foto'}</label>
+          <input type="file" id="loginPhotoRightInput" accept="image/*" onchange="handleLoginPhotoSelect(event,'loginPhotoRight')">
+          ${c.loginPhotoRight ? `<button type="button" class="photo-remove-btn" onclick="removeLoginPhoto('loginPhotoRight')">Remover foto</button>` : ''}
+        </div>
+      </div>
+    </div>
     <h2 class="section-title">Dados da loja (impressos no ticket)</h2>
     <div class="card">
       <label>Nome da loja</label>
@@ -3605,6 +3660,29 @@ async function saveConfig(){
   const ok = await saveState();
   render();
   if(ok) alert('Configurações salvas!');
+}
+/* ---- Fotos laterais da tela de login ----
+   Guarda a imagem redimensionada (mesma técnica das fotos de produto), sem
+   recortar no envio — o recorte final (tamanho/proporção sempre iguais) é
+   feito na exibição via CSS (object-fit:cover), então qualquer foto enviada
+   fica visualmente padronizada. */
+async function handleLoginPhotoSelect(evt, key){
+  const file = evt.target.files && evt.target.files[0];
+  if(!file) return;
+  try{
+    const dataUrl = await resizeImageToDataUrl(file, 640, 0.7);
+    state.config[key] = dataUrl;
+    const ok = await saveState();
+    render();
+    if(!ok) alert('⚠️ Não foi possível salvar a foto (armazenamento cheio). Tente uma imagem menor.');
+  }catch(e){
+    alert('Não foi possível carregar essa imagem.');
+  }
+}
+async function removeLoginPhoto(key){
+  state.config[key] = null;
+  await saveState();
+  render();
 }
 function wipeData(){
   showModal(`
