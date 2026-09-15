@@ -1486,7 +1486,7 @@ function openQtyModal(pid){
   const maxLabel = max===Infinity ? '' : `<div class="small muted" style="text-align:center;margin-top:4px;">Máximo disponível: ${max}</div>`;
   showModal(`
     <h3>${escapeHtml(p.name)}</h3>
-    ${p.photo ? `<img src="${p.photo}" style="width:100%;max-height:160px;object-fit:cover;border-radius:12px;margin-bottom:10px;">` : ''}
+    ${p.photo ? `<img src="${p.photo}" style="display:block;width:100%;max-width:220px;aspect-ratio:1/1;object-fit:cover;border-radius:12px;margin:0 auto 12px;">` : ''}
     <label>Preço unitário</label>
     <input id="qtyModalPriceInput" type="text" inputmode="decimal" value="${startPrice.toFixed(2).replace('.',',')}" style="font-size:18px;font-weight:800;color:var(--primary);" oninput="updateQtySubtotal()">
     <div class="small muted" id="qtyOriginalPriceNote" style="margin-top:4px; display:${startPrice!==p.price?'block':'none'};">Preço de cadastro: ${fmt(p.price)}</div>
