@@ -2,90 +2,3265 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>PDV Fácil</title>
 <style>
-:root{--bg:#f7f1e7;--card:#fff;--primary:#8a6d46;--dark:#6b5236;--light:#f0e6d2;--accent:#c97c3d;--danger:#e5484d;--text:#2b2620;--muted:#8a7f6e;--border:#e8dfcd;--radius:14px}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}button,input,select{font:inherit}button{cursor:pointer}.app{max-width:1100px;margin:auto;min-height:100vh}.bar{height:58px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 16px;position:sticky;top:0;z-index:5}.bar b{font-size:18px}.status{font-size:12px}.view{padding:16px 16px 90px}.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(100%,1100px);height:66px;background:#fff;border-top:1px solid var(--border);display:flex;z-index:5}.nav button{flex:1;border:0;background:transparent;color:var(--muted);font-size:11px}.nav button.active{color:var(--primary);font-weight:800}.nav span{display:block;font-size:21px}.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:10px}.product{border:1px solid var(--border);border-radius:12px;background:#fff;text-align:left;padding:12px}.product strong{display:block}.product-photo{width:100%;height:115px;object-fit:cover;border-radius:9px;margin-bottom:9px;background:var(--light)}.product-photo.thumb{width:58px;height:58px;margin:0 10px 0 0;flex:none}.photo-preview{width:100%;max-height:210px;object-fit:contain;border:1px solid var(--border);border-radius:10px;margin-top:8px;background:var(--bg)}.price{color:var(--primary);font-weight:800;margin-top:5px}.muted{color:var(--muted);font-size:13px}.btn{border:0;border-radius:11px;padding:12px 15px;font-weight:750}.primary{background:var(--primary);color:#fff}.outline{background:#fff;border:1px solid var(--primary);color:var(--primary)}.danger{background:#fdebed;color:var(--danger)}.ghost{background:var(--light);color:var(--dark)}.row{display:flex;align-items:center;justify-content:space-between;gap:10px}.row+.row{margin-top:9px}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions>*{flex:1}.field{margin:10px 0}.field label{display:block;color:var(--muted);font-size:12px;font-weight:700;margin-bottom:5px}.field input,.field select{width:100%;padding:11px;border:1px solid var(--border);border-radius:10px;background:#fff}.modal{position:fixed;inset:0;background:#0008;display:none;align-items:flex-end;z-index:10}.modal.open{display:flex}.sheet{background:#fff;width:100%;max-width:600px;margin:auto;border-radius:20px 20px 0 0;padding:18px;max-height:90vh;overflow:auto}.auth{position:fixed;inset:0;background:var(--primary);display:flex;align-items:center;justify-content:center;padding:20px;z-index:20}.auth .card{width:min(100%,380px)}.error{color:var(--danger);font-size:13px;margin-top:8px}.success{color:#407957;font-size:13px}.badge{padding:4px 8px;border-radius:99px;background:var(--light);font-size:11px;font-weight:700}.offline{background:#fff1ec;color:var(--accent);padding:8px;border-radius:9px;font-size:12px;margin-bottom:12px}.cart{position:fixed;bottom:66px;left:50%;transform:translateX(-50%);width:min(100%,1100px);background:var(--dark);color:#fff;padding:12px 16px;display:none}.cart.show{display:flex;justify-content:space-between;align-items:center}.smallbtn{padding:7px 10px;border:0;border-radius:8px;background:var(--light);color:var(--dark)}table{width:100%;border-collapse:collapse}td{padding:8px 0;border-bottom:1px solid var(--border)}
+  :root{
+    --bg:#F7F1E7;
+    --surface:#FFFFFF;
+    --primary:#8A6D46;
+    --primary-dark:#6B5236;
+    --primary-light:#F0E6D2;
+    --accent:#C97C3D;
+    --danger:#E5484D;
+    --danger-light:#FDEBEB;
+    --success:#A88D4A;
+    --text:#2B2620;
+    --muted:#8A7F6E;
+    --border:#E8DFCD;
+    --radius:14px;
+    --nav-h:64px;
+    --bar-h:56px;
+    --app-w:460px; /* largura do app — aumenta em telas maiores via media queries abaixo */
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+    display:flex; justify-content:center;
+  }
+  #phone{
+    width:100%; max-width:var(--app-w); min-height:100vh; background:var(--bg);
+    display:flex; flex-direction:column; position:relative;
+  }
+  /* ---------- App bar ---------- */
+  #appbar{
+    height:var(--bar-h); background:var(--primary); color:#fff;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 16px; position:sticky; top:0; z-index:20;
+  }
+  #appbar .title{font-size:17px; font-weight:700; letter-spacing:.2px;}
+  #appbar .status{
+    font-size:11px; font-weight:700; padding:5px 10px; border-radius:999px;
+    background:rgba(255,255,255,.15); display:flex; align-items:center; gap:6px;
+  }
+  #appbar .status .dot{width:7px;height:7px;border-radius:50%;background:#8FE3C5;}
+  #appbar .status.closed .dot{background:#FFB4A6;}
+  #appbar .status.closed{background:rgba(255,107,74,.25);}
+
+  /* ---------- Views ---------- */
+  #view{flex:1; padding:14px 14px calc(var(--nav-h) + 20px); overflow-y:auto;}
+  h2.section-title{font-size:14px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin:18px 2px 10px; font-weight:700;}
+  h2.section-title:first-child{margin-top:0;}
+
+  .card{background:var(--surface); border-radius:var(--radius); padding:14px; margin-bottom:10px; border:1px solid var(--border);}
+  .row{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .muted{color:var(--muted);}
+  .small{font-size:12px;}
+
+  /* ---------- Buttons ---------- */
+  button{font-family:inherit; cursor:pointer;}
+  .btn{
+    border:none; border-radius:12px; padding:13px 16px; font-size:15px; font-weight:700;
+    display:flex; align-items:center; justify-content:center; gap:8px; width:100%;
+  }
+  .btn-primary{background:var(--primary); color:#fff;}
+  .btn-primary:active{background:var(--primary-dark);}
+  .btn-accent{background:var(--accent); color:#fff;}
+  .btn-outline{background:transparent; color:var(--primary); border:1.5px solid var(--primary);}
+  .btn-danger{background:var(--danger-light); color:var(--danger);}
+  .btn-ghost{background:var(--primary-light); color:var(--primary-dark);}
+  .btn-sm{padding:8px 12px; font-size:13px; width:auto;}
+  .btn:disabled{opacity:.45; cursor:not-allowed;}
+  .btn-row{display:flex; gap:8px;}
+  .btn-row .btn{flex:1;}
+
+  /* ---------- Inputs ---------- */
+  label{font-size:12px; font-weight:700; color:var(--muted); display:block; margin:10px 2px 5px;}
+  input, select, textarea{
+    width:100%; padding:12px; border-radius:10px; border:1.5px solid var(--border);
+    font-size:15px; background:#fff; color:var(--text); font-family:inherit;
+  }
+  input:focus, select:focus, textarea:focus{outline:none; border-color:var(--primary);}
+
+  /* ---------- Bottom nav ---------- */
+  #bottomnav{
+    height:var(--nav-h); background:#fff; border-top:1px solid var(--border);
+    display:flex; position:fixed; bottom:0; width:100%; max-width:var(--app-w); z-index:20;
+  }
+  .navbtn{
+    flex:1; border:none; background:transparent; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:3px; color:var(--muted); font-size:11px; font-weight:600;
+  }
+  .navbtn.active{color:var(--primary);}
+  .navbtn svg{width:22px; height:22px;}
+
+  /* ---------- Product grid (Venda) ---------- */
+  #searchBox{margin-bottom:10px;}
+  .cat-chips{
+    display:flex; gap:8px; overflow-x:auto; padding-bottom:4px; margin-bottom:12px;
+    -ms-overflow-style:none; scrollbar-width:none;
+  }
+  .cat-chips::-webkit-scrollbar{display:none;}
+  .cat-chip{
+    flex-shrink:0; border:1.5px solid var(--border); background:#fff; color:var(--text);
+    border-radius:999px; padding:8px 16px; font-size:13px; font-weight:700; white-space:nowrap;
+  }
+  .cat-chip.selected{background:var(--primary); border-color:var(--primary); color:#fff;}
+
+  .theme-swatch-grid{display:flex; flex-wrap:wrap; gap:10px; align-items:center;}
+  .theme-swatch{
+    width:10mm; height:10mm; flex-shrink:0; border-radius:50%; border:2px solid transparent; position:relative;
+    overflow:hidden; padding:0; margin:0; box-sizing:border-box; vertical-align:middle;
+  }
+  .theme-swatch.selected{border-color:var(--text); box-shadow:0 0 0 2px #fff inset;}
+  .theme-swatch.selected::after{
+    content:'✓'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    color:#fff; font-weight:800; font-size:12px; text-shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+  .theme-swatch-custom{
+    display:flex; align-items:center; justify-content:center;
+    background-image:conic-gradient(red, yellow, lime, cyan, blue, magenta, red);
+  }
+  .prod-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:10px;}
+  .prod-tile{
+    background:#fff; border:1px solid var(--border); border-radius:12px; padding:0; overflow:hidden;
+    text-align:left; display:flex; flex-direction:column; min-height:78px;
+  }
+  .prod-tile .ptext{padding:10px 12px 12px; display:flex; flex-direction:column; gap:4px;}
+  .prod-photo{width:100%; aspect-ratio:1/1; object-fit:cover; object-position:center; display:block; background:var(--bg);}
+  .prod-photo-placeholder{
+    width:100%; aspect-ratio:1/1; display:flex; align-items:center; justify-content:center;
+    background:var(--primary-light); color:var(--primary); opacity:.55;
+  }
+  .prod-photo-placeholder svg{width:28px; height:28px;}
+  .prod-tile:active{background:var(--primary-light);}
+  .prod-tile .pname{font-weight:700; font-size:13.5px; line-height:1.25;}
+  .prod-tile .pprice{color:var(--primary); font-weight:800; font-size:14px;}
+  .prod-tile .pstock{font-size:11px; color:var(--muted);}
+  .empty{text-align:center; color:var(--muted); padding:40px 10px; font-size:14px;}
+
+  /* ---------- Upload de foto (cadastro) ---------- */
+  .photo-upload{display:flex; align-items:center; gap:12px; margin-top:6px;}
+  .photo-preview-box{
+    width:72px; height:72px; border-radius:12px; overflow:hidden; flex-shrink:0;
+    background:var(--primary-light); display:flex; align-items:center; justify-content:center; color:var(--primary);
+    border:1px solid var(--border);
+  }
+  .photo-preview-box img{width:100%; height:100%; object-fit:cover;}
+  .photo-preview-box svg{width:26px; height:26px; opacity:.6;}
+  .photo-upload-actions{display:flex; flex-direction:column; gap:6px; flex:1;}
+  .photo-upload-actions input[type=file]{display:none;}
+  .photo-btn{
+    border:1.5px solid var(--primary); color:var(--primary); background:#fff; border-radius:10px;
+    padding:9px 12px; font-size:13px; font-weight:700; text-align:center;
+  }
+  .photo-remove-btn{border:none; background:transparent; color:var(--danger); font-size:12px; font-weight:700; padding:2px;}
+
+  /* list item thumb (produtos cadastrados) */
+  .prod-list-thumb{width:46px; height:46px; border-radius:10px; object-fit:cover; flex-shrink:0; background:var(--bg);}
+  .prod-list-thumb-placeholder{
+    width:46px; height:46px; border-radius:10px; flex-shrink:0; background:var(--primary-light);
+    display:flex; align-items:center; justify-content:center; color:var(--primary); opacity:.55;
+  }
+  .prod-list-thumb-placeholder svg{width:20px; height:20px;}
+
+  .stock-adjust{
+    display:flex; align-items:center; gap:8px; margin-top:10px; padding-top:10px;
+    border-top:1px solid var(--border);
+  }
+  .stock-adjust .icon-btn{width:30px; height:30px; font-size:16px; font-weight:700; flex-shrink:0;}
+  .stock-input{
+    width:56px; text-align:center; padding:6px 4px; font-weight:700; -moz-appearance:textfield;
+  }
+  .stock-input::-webkit-outer-spin-button, .stock-input::-webkit-inner-spin-button{
+    -webkit-appearance:none; margin:0;
+  }
+
+
+  /* ---------- Cart drawer ---------- */
+  #cartBar{
+    position:fixed; bottom:var(--nav-h); width:100%; max-width:var(--app-w); background:var(--primary-dark);
+    color:#fff; padding:12px 14px; display:none; align-items:center; justify-content:space-between;
+    z-index:19; border-radius:14px 14px 0 0;
+  }
+  #cartBar.show{display:flex;}
+  #cartBar .info{font-size:13px; opacity:.85;}
+  #cartBar .total{font-size:18px; font-weight:800;}
+  #cartBar button{background:#fff; color:var(--primary-dark); border:none; border-radius:10px; padding:10px 16px; font-weight:800; font-size:14px;}
+
+  /* ---------- Cart list items ---------- */
+  .cart-item{display:flex; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--border);}
+  .cart-item:last-child{border-bottom:none;}
+  .cart-item .ci-name{flex:1; font-size:14px; font-weight:600;}
+  .cart-item .ci-price{font-size:12px; color:var(--muted);}
+  .qty-ctrl{display:flex; align-items:center; gap:8px;}
+  .qty-ctrl button{width:28px; height:28px; border-radius:8px; border:1px solid var(--border); background:#fff; font-size:16px; font-weight:700; color:var(--primary);}
+  .qty-ctrl span{min-width:18px; text-align:center; font-weight:700;}
+
+  /* ---------- Modal ---------- */
+  /* ---------- Autenticação ---------- */
+  #authScreen{
+    position:fixed; inset:0; z-index:80; display:none; align-items:center; justify-content:center;
+    background:var(--primary); padding:24px;
+  }
+  .auth-card{
+    background:#fff; border-radius:20px; padding:28px 22px; width:100%; max-width:360px;
+  }
+  .auth-card h2{margin:0 0 4px; font-size:20px;}
+  .auth-card p{margin:0 0 16px;}
+  .auth-logo{width:56px; height:56px; border-radius:16px; background:var(--primary); display:flex; align-items:center; justify-content:center; margin:0 auto 16px; color:#fff;}
+  .auth-logo svg{width:28px; height:28px;}
+
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(10,20,20,.5); display:none;
+    align-items:flex-end; justify-content:center; z-index:50;
+  }
+  .modal-overlay.show{display:flex;}
+  .modal{
+    background:#fff; width:100%; max-width:var(--app-w); border-radius:20px 20px 0 0;
+    padding:18px 18px 26px; max-height:88vh; overflow-y:auto;
+  }
+  .modal h3{margin:0 0 4px; font-size:17px;}
+  .modal .close-x{position:absolute; right:22px; background:var(--bg); border:none; width:30px; height:30px; border-radius:50%; font-size:16px; color:var(--muted);}
+  .modal-handle{width:40px; height:4px; background:var(--border); border-radius:99px; margin:0 auto 14px;}
+
+  /* payment method chips */
+  .pay-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:12px 0;}
+  .pay-chip{
+    border:1.5px solid var(--border); border-radius:12px; padding:14px 10px; text-align:center;
+    font-weight:700; font-size:13.5px; background:#fff; color:var(--text);
+  }
+  .pay-chip.selected{border-color:var(--primary); background:var(--primary-light); color:var(--primary-dark);}
+
+  /* receipt */
+  #receiptPaper{
+    font-family:'Courier New', monospace; font-size:12.5px; background:#fff; padding:14px;
+    border:1px dashed var(--border); border-radius:8px; white-space:pre-wrap; line-height:1.5;
+  }
+
+  table.simple{width:100%; border-collapse:collapse; font-size:13px;}
+  table.simple td{padding:5px 0; border-bottom:1px solid var(--border);}
+  table.simple tr:last-child td{border-bottom:none;}
+
+  .swipe-item{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+  .icon-btn{background:var(--bg); border:none; border-radius:8px; width:32px; height:32px; display:flex; align-items:center; justify-content:center; color:var(--muted); font-size:14px;}
+
+  .badge{display:inline-block; font-size:10.5px; font-weight:800; padding:3px 8px; border-radius:99px;}
+  .badge.green{background:var(--primary-light); color:var(--primary-dark);}
+  .badge.red{background:var(--danger-light); color:var(--danger);}
+  .badge.orange{background:#FFF1EC; color:var(--accent);}
+
+  /* ---------- Histórico ---------- */
+  .hist-summary{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:14px;}
+  .hist-summary .card{padding:10px; text-align:center; margin-bottom:0;}
+  .hist-summary .hs-label{font-size:10.5px; color:var(--muted); font-weight:700; text-transform:uppercase;}
+  .hist-summary .hs-value{font-size:15px; font-weight:800; color:var(--primary); margin-top:2px;}
+  #histChart{width:100%; height:150px; display:block;}
+  #prodChart{width:100%; height:190px; display:block;}
+  .sale-row{padding:12px 0; border-bottom:1px solid var(--border);}
+  .sale-row:last-child{border-bottom:none;}
+  .sale-row.cancelled{opacity:.55;}
+  .sale-row .sr-items{font-size:12px; color:var(--muted); margin:2px 0 8px;}
+  .sale-row .sr-top{display:flex; justify-content:space-between; align-items:center;}
+  .sale-row .sr-time{font-weight:700; font-size:13.5px;}
+  .sale-row .sr-total{font-weight:800; font-size:14.5px;}
+  .sale-row.cancelled .sr-total{text-decoration:line-through;}
+
+  /* print styles */
+  @media print{
+    body *{visibility:hidden;}
+    #printArea, #printArea *{visibility:visible;}
+    #printArea{display:block !important; position:absolute; left:0; top:0; font-family:'Courier New',monospace; font-size:11px; white-space:pre-wrap;}
+  }
+  #printArea{display:none;}
+
+  /* ---------- Telas maiores (tablet / computador) ---------- */
+  @media (min-width: 640px){
+    :root{ --app-w: 680px; }
+    .prod-grid{ grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); }
+  }
+  @media (min-width: 900px){
+    :root{ --app-w: 960px; }
+    body{ background:var(--bg); }
+    #phone{ box-shadow:0 0 0 1px var(--border), 0 12px 40px rgba(16,32,32,.08); border-radius:0 0 18px 18px; }
+    .prod-grid{ grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); }
+    .hist-summary{ grid-template-columns:repeat(3, 1fr); }
+  }
+  @media (min-width: 1280px){
+    :root{ --app-w: 1180px; }
+    .prod-grid{ grid-template-columns:repeat(auto-fill, minmax(190px, 1fr)); }
+  }
 </style>
 </head>
 <body>
-<div class="app"><header class="bar"><b id="storeName">PDV Fácil</b><div><span id="netStatus">Conectando…</span> <button id="logout" class="smallbtn" style="display:none" onclick="logout()">Sair</button></div></header><main id="view" class="view"></main><nav class="nav"><button data-tab="sale" onclick="tab('sale')"><span>🛒</span>Venda</button><button data-tab="products" onclick="tab('products')"><span>📦</span>Produtos</button><button data-tab="cash" onclick="tab('cash')"><span>💵</span>Caixa</button><button data-tab="history" onclick="tab('history')"><span>📊</span>Histórico</button><button data-tab="returns" onclick="tab('returns')"><span>🔄</span>Trocas</button><button data-tab="settings" onclick="tab('settings')"><span>⚙️</span>Config</button></nav><div id="cartBar" class="cart"></div></div>
-<div id="auth" class="auth"></div><div id="modal" class="modal" onclick="if(event.target.id==='modal')closeModal()"><div id="sheet" class="sheet"></div></div>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<div id="phone">
+
+  <div id="appbar">
+    <div class="title" id="storeTitle">PDV Fácil</div>
+    <div style="display:flex; align-items:center; gap:8px;">
+      <div class="status closed" id="cashStatus"><span class="dot"></span><span id="cashStatusText">Caixa fechado</span></div>
+      <button id="logoutBtn" onclick="confirmLogout()" title="Sair" style="background:rgba(255,255,255,.15); border:none; color:#fff; width:30px; height:30px; border-radius:8px; display:none; align-items:center; justify-content:center;">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"/><line x1="12" y1="2" x2="12" y2="12"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="view"></div>
+
+  <div id="cartBar">
+    <div>
+      <div class="info" id="cartInfo">0 itens</div>
+      <div class="total" id="cartTotal">R$ 0,00</div>
+    </div>
+    <button onclick="openCartReview()">Ver carrinho ▸</button>
+  </div>
+
+  <div id="bottomnav">
+    <button class="navbtn" data-tab="venda" onclick="setTab('venda')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+      Venda
+    </button>
+    <button class="navbtn" data-tab="produtos" onclick="setTab('produtos')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8V21H3V8"/><path d="M1 3h22v5H1z"/><path d="M10 12h4"/></svg>
+      Cadastro
+    </button>
+    <button class="navbtn" data-tab="caixa" onclick="setTab('caixa')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="14" rx="2"/><path d="M2 10h20"/><circle cx="12" cy="15" r="1.5"/></svg>
+      Caixa
+    </button>
+    <button class="navbtn" data-tab="troca" onclick="setTab('troca')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      Troca
+    </button>
+    <button class="navbtn" data-tab="historico" onclick="setTab('historico')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-6 4 3 5-8"/></svg>
+      Histórico
+    </button>
+    <button class="navbtn" data-tab="config" onclick="setTab('config')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Config
+    </button>
+  </div>
+</div>
+
+<!-- ================= AUTENTICAÇÃO ================= -->
+<div id="authScreen"></div>
+
+<!-- ================= MODALS ================= -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal" id="modalBody"></div>
+</div>
+
+<div id="printArea"></div>
+
 <script>
-'use strict';
-// IMPORTANTE: copie a apiKey EXATAMENTE do Firebase Console > Configurações do projeto > Seu app Web.
-// A chave abaixo foi removida porque o Firebase informou que ela não é válida.
-const firebaseConfig={apiKey:'AIzaSyBIxL5q02DVW6SvIIwsknQ8PDxH21OVC0s',authDomain:'pdv-facil-fa2ff.firebaseapp.com',projectId:'pdv-facil-fa2ff',storageBucket:'pdv-facil-fa2ff.firebasestorage.app',messagingSenderId:'940660086113',appId:'1:940660086113:web:86ee0f3c7e2540c85f2120'};
-const firebaseReady=/^AIza[\w-]{30,}$/.test(firebaseConfig.apiKey);
-if(firebaseReady) firebase.initializeApp(firebaseConfig);
-const auth=firebaseReady?firebase.auth():null,db=firebaseReady?firebase.firestore():null;
-const ADMIN_UID='Mafb3zRfjZNMeQ9hyh8DCQBo4Tt2',STORE_ID='loja-principal-v2';
-const storeRef=db.collection('lojas').doc(STORE_ID), col=n=>storeRef.collection(n);const key='pdv-v2-queue';
-let user=null,profile=null,tabName='sale',products=[],sales=[],members=[],cash=null,cart=[],settings={storeName:'Minha Loja',themeColor:'#8A6D46',printerWidth:'58',printMode:'dialog'},queue=JSON.parse(localStorage.getItem(key)||'[]');
-let authNotice='';
-const $=id=>document.getElementById(id), money=n=>(Number(n)||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}),id=()=>crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random();
-function esc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
-function setNet(){ $('netStatus').textContent=navigator.onLine?'Online':'Offline';$('netStatus').style.color=navigator.onLine?'#b7f3d4':'#ffd1c7'}window.addEventListener('online',()=>{setNet();syncQueue()});window.addEventListener('offline',setNet);setNet();
-function authHtml(msg=''){return `<div class="card"><h2>Entrar no PDV</h2><p class="muted">Use o e-mail cadastrado no Firebase Authentication.</p><div class="field"><label>E-mail</label><input id="email" type="email" value="jaylsonalves@hotmail.com"></div><div class="field"><label>Senha</label><input id="pass" type="password" onkeydown="if(event.key==='Enter')login()"></div><div id="authErr" class="error">${msg}</div><button class="btn primary" style="width:100%;margin-top:12px" onclick="login()">Entrar</button><button class="btn outline" style="width:100%;margin-top:8px" onclick="resetPassword()">Esqueci a senha</button></div>`}
-function renderAuth(){if(!firebaseReady){$('auth').style.display='flex';$('auth').innerHTML=`<div class="card"><h2>Configuração do Firebase necessária</h2><p class="error">A API key configurada anteriormente foi recusada pelo Firebase.</p><p class="muted">No arquivo <b>index.html</b>, localize <code>COLE_AQUI_A_API_KEY_VALIDA_DO_FIREBASE</code> e substitua pelo valor <code>apiKey</code> copiado do Firebase Console → Configurações do projeto → Seu app Web.</p><p class="muted">Não inclua aspas extras, espaços ou quebras de linha. Depois publique novamente no GitHub Pages.</p></div>`;$('logout').style.display='none';return}if(user){$('auth').style.display='none';$('logout').style.display='inline-block'}else{$('auth').style.display='flex';$('auth').innerHTML=authHtml();$('logout').style.display='none'}}
-async function login(){try{await auth.signInWithEmailAndPassword($('email').value.trim(),$('pass').value)}catch(e){$('authErr').textContent='Não foi possível entrar: '+friendly(e)}}async function resetPassword(){try{await auth.sendPasswordResetEmail($('email').value.trim());alert('Link enviado para o e-mail.')}catch(e){$('authErr').textContent=friendly(e)}}async function logout(){await auth.signOut()}function friendly(e){return e.code==='auth/wrong-password'||e.code==='auth/invalid-credential'?'E-mail ou senha inválidos.':e.message}
-function profileDefault(){return {uid:user.uid,email:user.email,role:user.uid===ADMIN_UID?'admin':'operator',mustChangePassword:true,onboardingVersion:1,active:true}}
-async function load(){if(!user)return;let memberRef=col('members').doc(user.uid),p=await memberRef.get();if(!p.exists){if(user.uid===ADMIN_UID){profile=profileDefault();await memberRef.set({...profile,createdAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})}else{authNotice='Sua conta ainda não foi autorizada para esta loja. Peça ao administrador para cadastrá-la.';await auth.signOut();return}}else{profile=p.data();if(!profile.active){authNotice='Esta conta está desativada. Fale com o administrador.';await auth.signOut();return}if(profile.onboardingVersion!==1){profile={...profile,mustChangePassword:true,onboardingVersion:1};await memberRef.set({mustChangePassword:true,onboardingVersion:1},{merge:true})}}let cfg=await col('meta').doc('config').get();if(cfg.exists)settings={...settings,...cfg.data()};let ps=await col('products').get();products=ps.docs.map(d=>({id:d.id,...d.data()}));let ss=await col('sales').orderBy('createdAt','desc').limit(300).get();sales=ss.docs.map(d=>({id:d.id,...d.data()}));let ms=await col('members').get();members=ms.docs.map(d=>({id:d.id,...d.data()}));let c=await col('cashSessions').where('open','==',true).limit(1).get();cash=c.empty?null:{id:c.docs[0].id,...c.docs[0].data()};$('storeName').textContent=settings.storeName||'PDV Fácil';render();syncQueue()}
-function guard(){return user&&profile&&profile.active}function tab(t){if(t==='settings'&&profile.role!=='admin')return alert('Acesso restrito ao administrador.');tabName=t;render()}
-function render(){if(!guard())return;if(profile.mustChangePassword){passwordChangeView();return}document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===tabName));$('view').innerHTML=tabName==='sale'?saleView():tabName==='products'?productsView():tabName==='cash'?cashView():tabName==='history'?historyView():tabName==='returns'?returnsView():settingsView();cartBar()}
-function passwordChangeView(){$('view').innerHTML=`<div class="card"><h2>Troca de senha obrigatória</h2><p class="muted">Por segurança, crie uma nova senha antes de usar o PDV.</p><div class="field"><label>Nova senha</label><input id="newPass" type="password" autocomplete="new-password" placeholder="Mínimo de 6 caracteres"></div><div class="field"><label>Confirmar nova senha</label><input id="confirmPass" type="password" autocomplete="new-password"></div><div id="passErr" class="error"></div><button class="btn primary" style="width:100%" onclick="changeInitialPassword()">Salvar nova senha</button></div>`;$('cartBar').classList.remove('show')}
-async function changeInitialPassword(){let a=$('newPass').value,b=$('confirmPass').value,err=$('passErr');if(a.length<6){err.textContent='A senha precisa ter pelo menos 6 caracteres.';return}if(a!==b){err.textContent='As senhas não coincidem.';return}try{await user.updatePassword(a);await col('members').doc(user.uid).set({mustChangePassword:false,passwordChangedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});profile.mustChangePassword=false;render();alert('Senha alterada com sucesso.')}catch(e){err.textContent=e.code==='auth/requires-recent-login'?'Por segurança, saia e entre novamente para alterar a senha.':friendly(e)}}
-function saleView(){let q=window.q||'';let list=products.filter(p=>(p.name+' '+(p.barcode||'')).toLowerCase().includes(q.toLowerCase())&&(p.alwaysAvailable||p.stock==null||p.stock>0));return `<div class="offline" style="display:${navigator.onLine?'none':'block'}">Offline controlado: vendas ficam na fila local e só usam reserva disponível neste aparelho.</div><div class="field"><input placeholder="🔎 Buscar produto ou código" value="${esc(q)}" oninput="window.q=this.value;render()"></div>${!cash?'<div class="card">Abra o caixa antes de vender.</div>':''}<div class="grid">${list.map(p=>`<button class="product" onclick="add('${p.id}')">${p.photo?`<img class="product-photo" src="${esc(p.photo)}" alt="Foto de ${esc(p.name)}">`:''}<strong>${esc(p.name)}</strong><span class="price">${money(p.price)}</span><span class="muted">Estoque: ${p.stock==null?'—':p.stock}</span></button>`).join('')}</div>`}
-function add(pid){let p=products.find(x=>x.id===pid);if(!p)return;if(!cash)return alert('Abra o caixa antes de adicionar produtos à venda.');let inCart=cart.find(i=>i.productId===pid)?.qty||0;let available=typeof p.stock==='number'&&!p.alwaysAvailable?p.stock-inCart:999999;if(available<=0)return alert('Não há mais estoque disponível deste produto.');openModal(`<h3>Adicionar ao carrinho</h3>${p.photo?`<img class="photo-preview" src="${esc(p.photo)}" alt="Foto de ${esc(p.name)}">`:''}<p><b>${esc(p.name)}</b><br><span class="price">${money(p.price)}</span><br><span class="muted">Disponível: ${available===999999?'sem controle':available}</span></p><div class="row"><button class="smallbtn" onclick="adjustAddQty(-1,${available})">−</button><b id="addQty" style="font-size:22px">1</b><button class="smallbtn" onclick="adjustAddQty(1,${available})">+</button></div><div class="actions" style="margin-top:16px"><button class="btn outline" onclick="closeModal()">Continuar escolhendo</button><button class="btn primary" onclick="confirmAdd('${p.id}',${available})">Adicionar</button></div>`)}function adjustAddQty(change,max){let el=$('addQty'),next=Math.max(1,Math.min(max,Number(el.textContent)+change));el.textContent=next}function confirmAdd(pid,max){let p=products.find(x=>x.id===pid),qty=Number($('addQty').textContent);if(!p||qty<1)return;let x=cart.find(i=>i.productId===pid);if(x)x.qty+=qty;else cart.push({productId:pid,name:p.name,price:p.price,qty});closeModal();render()}
-function paymentRemaining(){return Math.max(0,cartTotal()-(window.payments||[]).reduce((a,p)=>a+p.amount,0))}function updateCashPayment(){let isCash=$('pay').value==='Dinheiro',box=$('cashPayment');box.style.display=isCash?'block':'none';let input=$('amountReceived'),info=$('changeInfo'),remaining=paymentRemaining();if(!isCash){input.value=remaining.toFixed(2);info.className='muted';info.textContent='Será usado o valor restante: '+money(remaining)+'.';return}let received=Number(input.value||0),difference=received-remaining;if(!received){info.className='muted';info.textContent='Informe o valor entregue pelo cliente.';return}if(difference<0){info.className='error';info.textContent='Faltam '+money(Math.abs(difference))+'. Adicione este pagamento e escolha outra forma para complementar.';return}info.className='success';info.textContent=difference?'Troco: '+money(difference):'Valor exato.'}function addPayment(){let method=$('pay').value,amount=Number($('amountReceived').value||0),remaining=paymentRemaining();if(amount<=0)return alert('Informe um valor de pagamento.');if(method!=='Dinheiro'&&amount>remaining)amount=remaining;if(method==='Dinheiro'&&amount>remaining){window.payments.push({method,amount:remaining,received:amount,change:amount-remaining})}else window.payments.push({method,amount,received:amount,change:0});checkout()}function removePayment(i){window.payments.splice(i,1);checkout()}
-function removeCartItem(productId){let item=cart.find(x=>x.productId===productId);if(!item)return;if(item.qty>1)item.qty--;else cart=cart.filter(x=>x.productId!==productId);window.payments=[];if(!cart.length){closeModal();render();return}checkout()}
-function cancelSale(){if(!confirm('Cancelar esta venda? Todos os itens e pagamentos informados serão removidos.'))return;cart=[];window.payments=[];closeModal();render()}
-function cartTotal(){return cart.reduce((a,x)=>a+x.price*x.qty,0)}function cartBar(){let b=$('cartBar');if(!cart.length){b.classList.remove('show');return}b.classList.add('show');b.innerHTML=`<span>${cart.reduce((a,x)=>a+x.qty,0)} itens · <b>${money(cartTotal())}</b></span><button class="smallbtn" onclick="checkout()">Pagamento</button>`}
-function checkout(){window.payments=window.payments||[];let remaining=paymentRemaining(),paid=cartTotal()-remaining,change=window.payments.reduce((a,p)=>a+(p.change||0),0);openModal(`<h3>Confirmar venda</h3>${cart.map(x=>`<div class="row"><span>${esc(x.name)} × ${x.qty}</span><div class="row"><b>${money(x.price*x.qty)}</b><button class="smallbtn" onclick="removeCartItem('${x.productId}')" title="Remover uma unidade">−</button></div></div>`).join('')}<hr><div class="row"><b>Total</b><b>${money(cartTotal())}</b></div>${window.payments.length?`<div class="card" style="padding:10px;margin:10px 0"><b>Pagamentos adicionados</b>${window.payments.map((p,i)=>`<div class="row"><span>${esc(p.method)} · ${money(p.amount)}${p.change?' · recebido '+money(p.received):''}</span><button class="smallbtn" onclick="removePayment(${i})">Remover</button></div>`).join('')}</div>`:''}<div class="row"><b>Falta pagar</b><b class="${remaining?'error':'success'}">${money(remaining)}</b></div>${change?`<div class="row"><b>Troco</b><b class="success">${money(change)}</b></div>`:''}${remaining>0?`<div class="field"><label>Adicionar forma de pagamento</label><select id="pay" onchange="updateCashPayment()"><option>Dinheiro</option><option>Débito</option><option>Crédito</option><option>Pix</option></select><div id="cashPayment" class="field"><label>Valor recebido / valor nesta forma</label><input id="amountReceived" type="number" inputmode="decimal" min="0" step="0.01" placeholder="0,00" oninput="updateCashPayment()"><div id="changeInfo" class="muted" style="margin-top:8px">Informe o valor entregue pelo cliente.</div></div><button class="btn outline" style="width:100%;margin-top:4px" onclick="addPayment()">+ Adicionar pagamento</button></div>`:''}<div class="actions"><button class="btn danger" onclick="cancelSale()">Cancelar venda</button><button class="btn outline" onclick="closeModal()">Continuar comprando</button><button class="btn primary" ${remaining>0?'disabled':''} onclick="createSale()">Finalizar</button></div>`);if(remaining>0)updateCashPayment()}
-async function createSale(){
-  if(!cart.length||!cash)return;
-  window.payments=window.payments||[];
-  if(paymentRemaining()>0.001)return alert('Ainda falta pagar '+money(paymentRemaining())+'.');
-  const payments=window.payments.map(p=>({...p}));
-  const payment=payments.map(p=>p.method).join(' + ')||'Não informado';
-  const amountReceived=payments.reduce((sum,p)=>sum+Number(p.received||p.amount||0),0);
-  const change=payments.reduce((sum,p)=>sum+Number(p.change||0),0);
-  const sale={id:id(),cashId:cash.id,deviceId:deviceId(),userId:user.uid,items:cart.map(x=>({...x})),total:cartTotal(),payments,payment,amountReceived,change,status:'confirmed',createdAt:firebase.firestore.FieldValue.serverTimestamp(),clientCreatedAt:Date.now()};
+/* ============================================================
+   FIREBASE (banco de dados compartilhado — sincroniza entre
+   qualquer dispositivo que acessar o app online)
+   Carregado em segundo plano, sem travar o app caso a internet
+   esteja lenta, instável ou indisponível no momento.
+============================================================ */
+const firebaseConfig = {
+  apiKey: "AIzaSyBIxL5q02DVW6SvIIwsknQ8PDxH21OVC0s",
+  authDomain: "pdv-facil-fa2ff.firebaseapp.com",
+  projectId: "pdv-facil-fa2ff",
+  storageBucket: "pdv-facil-fa2ff.firebasestorage.app",
+  messagingSenderId: "940660086113",
+  appId: "1:940660086113:web:86ee0f3c7e2540c85f2120"
+};
+let fbDb = null, fbAvailable = false;
+function loadScriptAsync(src){
+  return new Promise((resolve, reject)=>{
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = ()=>resolve();
+    s.onerror = ()=>reject(new Error('Falha ao carregar '+src));
+    document.head.appendChild(s);
+  });
+}
+async function initFirebase(){
   try{
-    const registeredSale=await commitSale(sale);
-    alert('Venda registrada. Ticket nº '+registeredSale.ticketNumber+'.');
-    cart=[];window.payments=[];closeModal();await load();printReceipt(registeredSale);
+    await withTimeout(loadScriptAsync('https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js'), 4000);
+    await withTimeout(loadScriptAsync('https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js'), 4000);
+    await withTimeout(loadScriptAsync('https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js'), 4000);
+    if(window.firebase){
+      firebase.initializeApp(firebaseConfig);
+      fbDb = firebase.firestore();
+      fbAvailable = true;
+    }
   }catch(e){
-    const offline=!navigator.onLine||e.code==='unavailable'||e.code==='failed-precondition'||/network|offline|unavailable/i.test(e.message||'');
-    if(offline){
-      queue.push({...sale,createdAt:null});localStorage.setItem(key,JSON.stringify(queue));cart=[];window.payments=[];closeModal();render();
-      alert('Sem conexão com o servidor. Venda colocada na fila offline e será sincronizada quando a conexão voltar.');
-    }else{alert('A venda não foi registrada: '+friendly(e));console.error('Erro ao registrar venda:',e)}
+    console.error('Firebase indisponível no momento — o app vai funcionar normalmente usando os dados salvos neste aparelho.', e);
   }
 }
-async function commitSale(sale){let refs=sale.items.map(i=>col('products').doc(i.productId)),counterRef=col('meta').doc('counters');let registeredSale;await db.runTransaction(async tx=>{let counterSnap=await tx.get(counterRef),nextTicket=Number(counterSnap.data()?.lastTicketNumber||0)+1;let snaps=[];for(let r of refs)snaps.push(await tx.get(r));snaps.forEach((s,n)=>{let p=s.data()||{};if(typeof p.stock==='number'&&!p.alwaysAvailable&&p.stock<sale.items[n].qty)throw Error('Estoque insuficiente para '+(p.name||''));});snaps.forEach((s,n)=>{let p=s.data()||{};if(typeof p.stock==='number'&&!p.alwaysAvailable)tx.update(refs[n],{stock:p.stock-sale.items[n].qty,updatedAt:firebase.firestore.FieldValue.serverTimestamp()})});registeredSale={...sale,ticketNumber:nextTicket};tx.set(counterRef,{lastTicketNumber:nextTicket,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});tx.create(col('sales').doc(sale.id),registeredSale);tx.create(col('audit').doc(id()),{type:'sale',saleId:sale.id,ticketNumber:nextTicket,userId:user.uid,deviceId:deviceId(),at:firebase.firestore.FieldValue.serverTimestamp()})});return registeredSale}
-async function syncQueue(){if(!navigator.onLine||!user)return;let left=[];for(const s of queue){try{await commitSale(s)}catch(e){left.push(s);console.error('Não foi possível sincronizar venda pendente:',e)}}queue=left;localStorage.setItem(key,JSON.stringify(queue));if(!left.length)render()}
-function deviceId(){let d=localStorage.getItem('pdv-device-id');if(!d){d=id();localStorage.setItem('pdv-device-id',d)}return d}
-function productsView(){return `<div class="actions"><button class="btn primary" onclick="productForm()">+ Produto</button><button class="btn outline" onclick="reload()">Atualizar</button></div><h3>Produtos (${products.length})</h3>${products.map(p=>`<div class="card"><div class="row"><div><b>${esc(p.name)}</b><div class="muted">${money(p.price)} · Estoque: ${p.stock==null?'sem controle':p.stock}</div></div><button class="smallbtn" onclick="productForm('${p.id}')">Editar</button></div></div>`).join('')}`}
-function productForm(pid){let p=products.find(x=>x.id===pid)||{};openModal(`<h3>${pid?'Editar':'Novo'} produto</h3><div class="field"><label>Nome</label><input id="pn" value="${esc(p.name||'')}"></div><div class="field"><label>Preço</label><input id="pp" type="number" step="0.01" value="${p.price||''}"></div><div class="field"><label>Estoque (vazio = sem controle)</label><input id="ps" type="number" value="${p.stock??''}"></div><div class="field"><label>Foto do produto</label><input id="photoFile" type="file" accept="image/*" onchange="previewProductPhoto(this)"><div class="muted">Escolha uma foto salva no celular ou computador.</div><img id="photoPreview" class="photo-preview" src="${esc(p.photo||'')}" alt="Prévia da foto" style="display:${p.photo?'block':'none'}"><input id="currentPhoto" type="hidden" value="${esc(p.photo||'')}"></div><div class="actions"><button class="btn outline" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="saveProduct('${pid||''}')">Salvar</button></div>`)}
-async function previewProductPhoto(input){let file=input.files&&input.files[0];if(!file)return;if(!file.type.startsWith('image/'))return alert('Escolha um arquivo de imagem.');try{let photo=await compressProductPhoto(file);$('currentPhoto').value=photo;$('photoPreview').src=photo;$('photoPreview').style.display='block'}catch(e){alert('Não foi possível preparar esta foto. Tente outra imagem.')}}
-function compressProductPhoto(file){return new Promise((resolve,reject)=>{let reader=new FileReader();reader.onerror=reject;reader.onload=()=>{let img=new Image();img.onerror=reject;img.onload=()=>{let max=600,scale=Math.min(1,max/Math.max(img.width,img.height)),c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.width*scale));c.height=Math.max(1,Math.round(img.height*scale));c.getContext('2d').drawImage(img,0,0,c.width,c.height);let photo=c.toDataURL('image/jpeg',.72);if(photo.length>700000)return reject(new Error('Foto grande demais'));resolve(photo)};img.src=reader.result};reader.readAsDataURL(file)})}
-async function saveProduct(pid){let name=$('pn').value.trim(),price=Number($('pp').value),raw=$('ps').value,photo=$('currentPhoto').value;if(!name||price<=0)return alert('Preencha nome e preço.');let ref=pid?col('products').doc(pid):col('products').doc(id()),data={name,price,stock:raw===''?null:Math.max(0,Number(raw)),photo:photo||null,alwaysAvailable:false,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};await ref.set(data,{merge:true});closeModal();await load()}
-function cashView(){if(!cash)return `<div class="card"><h3>Caixa fechado</h3><div class="field"><label>Valor inicial</label><input id="opening" type="number" step="0.01" inputmode="decimal" placeholder="0,00"></div><button class="btn primary" style="width:100%" onclick="openCash()">Abrir caixa</button></div>`;let sessionSales=sales.filter(s=>s.cashId===cash.id&&s.status!=='returned').reduce((a,s)=>a+Number(s.total||0),0),opening=Number(cash.openingAmount||0),expected=opening+sessionSales;return `<div class="card"><h3>Caixa aberto</h3><div class="row"><span>Aberto em</span><b>${new Date(cash.openedAt?.toDate?.()||cash.openedAt||Date.now()).toLocaleString('pt-BR')}</b></div><div class="row"><span>Valor inicial</span><b>${money(opening)}</b></div><div class="row"><span>Vendas na sessão</span><b>${money(sessionSales)}</b></div><div class="row"><span><b>Valor esperado no caixa</b></span><b class="success">${money(expected)}</b></div></div><button class="btn danger" style="width:100%" onclick="closeCash()">Fechar caixa</button>`}
-async function openCash(){let ref=col('cashSessions').doc(id()),data={open:true,openedAt:firebase.firestore.FieldValue.serverTimestamp(),openingAmount:Number($('opening').value||0),userId:user.uid,deviceId:deviceId()};await ref.set(data);await load()}async function closeCash(){if(!confirm('Fechar este caixa?'))return;await col('cashSessions').doc(cash.id).update({open:false,closedAt:firebase.firestore.FieldValue.serverTimestamp()});await load()}
-function historyView(){return `<h3>Últimas vendas</h3>${sales.slice(0,100).map(s=>`<div class="card"><div class="row"><span><b>Ticket nº ${s.ticketNumber??'—'}</b> · ${s.payment||''} · ${s.status==='returned'?'DEVOLVIDA':'Confirmada'}</span><b>${money(s.total)}</b></div><div class="muted">${s.items?.map(i=>`${i.qty}× ${esc(i.name)}`).join(', ')||''}</div></div>`).join('')||'<div class="card">Nenhuma venda.</div>'}`}
-function returnsView(){let term=String(window.returnTicket||'').trim(),available=sales.filter(s=>s.status!=='returned'&&(!term||String(s.ticketNumber||'').includes(term)));return `<h3>Troca / devolução</h3><div class="card"><p class="muted">Localize a venda pelo número do ticket e confirme a devolução integral. O estoque será restaurado.</p><div class="field"><label>Número do ticket</label><input inputmode="numeric" placeholder="Ex.: 125" value="${esc(term)}" oninput="window.returnTicket=this.value;render()"></div></div>${available.map(s=>`<div class="card"><div class="row"><div><b>Ticket nº ${s.ticketNumber??'—'}</b><div><b>${money(s.total)}</b></div><div class="muted">${esc(s.payment||'')} · ${s.items?.map(i=>`${i.qty}× ${esc(i.name)}`).join(', ')||''}</div></div><button class="smallbtn" onclick="confirmReturn('${s.id}')">Devolver</button></div></div>`).join('')||'<div class="card">Nenhuma venda encontrada para este ticket.</div>'}`}
-function confirmReturn(saleId){let s=sales.find(x=>x.id===saleId);if(!s)return;if(!confirm(`Confirmar devolução de ${money(s.total)}? O estoque será restaurado.`))return;returnSale(saleId)}
-async function returnSale(saleId){try{await db.runTransaction(async tx=>{let saleRef=col('sales').doc(saleId),snap=await tx.get(saleRef);if(!snap.exists)throw Error('Venda não encontrada.');let s=snap.data();if(s.status==='returned')throw Error('Esta venda já foi devolvida.');for(const item of s.items||[]){let productRef=col('products').doc(item.productId),productSnap=await tx.get(productRef);if(productSnap.exists){let p=productSnap.data();if(typeof p.stock==='number'&&!p.alwaysAvailable)tx.update(productRef,{stock:p.stock+Number(item.qty||0),updatedAt:firebase.firestore.FieldValue.serverTimestamp()})}}tx.update(saleRef,{status:'returned',returnedAt:firebase.firestore.FieldValue.serverTimestamp(),returnedBy:user.uid});tx.create(col('returns').doc(id()),{saleId,userId:user.uid,deviceId:deviceId(),total:s.total,items:s.items||[],createdAt:firebase.firestore.FieldValue.serverTimestamp()});tx.create(col('audit').doc(id()),{type:'return',saleId,userId:user.uid,deviceId:deviceId(),at:firebase.firestore.FieldValue.serverTimestamp()})});alert('Devolução registrada e estoque restaurado.');await load()}catch(e){alert('Não foi possível concluir a devolução: '+friendly(e));console.error('Erro ao devolver venda:',e)}}
-function settingsView(){return `<h3>Configuração</h3><div class="card"><div class="field"><label>Nome da loja</label><input id="sn" value="${esc(settings.storeName)}"></div><div class="field"><label>Largura da bobina</label><select id="sw"><option value="58" ${settings.printerWidth==='58'?'selected':''}>58mm</option><option value="80" ${settings.printerWidth==='80'?'selected':''}>80mm</option></select></div><div class="field"><label>Impressão de tickets</label><select id="pm"><option value="dialog" ${settings.printMode==='dialog'?'selected':''}>Computador/USB — abrir diálogo de impressão</option><option value="rawbt" ${settings.printMode==='rawbt'?'selected':''}>Android Bluetooth — RawBT</option></select><div class="muted">No computador, instale a impressora USB no sistema operacional e selecione-a na janela de impressão. No Android, instale o RawBT, pareie a impressora Bluetooth e escolha RawBT aqui.</div></div><button class="btn primary" onclick="saveSettings()">Salvar configurações</button></div><div class="card"><div class="row"><div><b>Usuários da loja</b><div class="muted">Cadastre operadores, defina a função e desative acessos.</div></div><button class="smallbtn" onclick="userForm()">+ Usuário</button></div>${members.map(m=>`<div class="row" style="padding-top:10px"><div><b>${esc(m.email||'Sem e-mail')}</b><div class="muted">${m.role==='admin'?'Administrador':'Operador'} · ${m.active===false?'Desativado':'Ativo'}${m.mustChangePassword?' · deve trocar senha':''}</div></div>${m.uid!==user.uid?`<button class="smallbtn" onclick="toggleUser('${m.id}')">${m.active===false?'Ativar':'Desativar'}</button>`:'<span class="badge">Você</span>'}</div>`).join('')||'<div class="muted" style="margin-top:10px">Nenhum usuário cadastrado.</div>'}</div><div class="card"><b>Dispositivo</b><div class="muted">ID: ${esc(deviceId())}</div><div class="muted">Fila offline: ${queue.length} operação(ões)</div></div>`}
-function userForm(){openModal(`<h3>Novo usuário</h3><p class="muted">A pessoa deverá trocar esta senha no primeiro acesso.</p><div class="field"><label>Nome (opcional)</label><input id="un" placeholder="Ex.: Maria"></div><div class="field"><label>E-mail</label><input id="ue" type="email" placeholder="nome@empresa.com"></div><div class="field"><label>Senha temporária</label><input id="up" type="password" minlength="6" placeholder="Mínimo de 6 caracteres"></div><div class="field"><label>Função</label><select id="ur"><option value="operator">Operador</option><option value="admin">Administrador</option></select></div><div class="actions"><button class="btn outline" onclick="closeModal()">Cancelar</button><button class="btn primary" onclick="createUser()">Cadastrar</button></div>`)}
-async function createUser(){let name=$('un').value.trim(),email=$('ue').value.trim().toLowerCase(),password=$('up').value,role=$('ur').value;if(!/^\S+@\S+\.\S+$/.test(email))return alert('Informe um e-mail válido.');if(password.length<6)return alert('A senha temporária precisa ter pelo menos 6 caracteres.');try{let secondary;try{secondary=firebase.app('pdv-user-provisioning')}catch(_){secondary=firebase.initializeApp(firebaseConfig,'pdv-user-provisioning')}let credential=await secondary.auth().createUserWithEmailAndPassword(email,password),newUser=credential.user;await col('members').doc(newUser.uid).set({uid:newUser.uid,name,email,role,active:true,mustChangePassword:true,onboardingVersion:1,createdAt:firebase.firestore.FieldValue.serverTimestamp(),createdBy:user.uid});await secondary.auth().signOut();closeModal();await load();alert('Usuário cadastrado. Informe a ele o e-mail e a senha temporária.')}catch(e){alert('Não foi possível cadastrar o usuário: '+friendly(e));console.error('Erro ao cadastrar usuário:',e)}}
-async function toggleUser(uid){let m=members.find(x=>x.id===uid);if(!m||!confirm(`${m.active===false?'Ativar':'Desativar'} o acesso de ${m.email}?`))return;await col('members').doc(uid).update({active:m.active===false,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:user.uid});await load()}
-async function saveSettings(){settings.storeName=$('sn').value.trim()||'Minha Loja';settings.printerWidth=$('sw').value;settings.printMode=$('pm').value;await col('meta').doc('config').set(settings,{merge:true});await load();alert('Configurações de impressão salvas.')}
-function openModal(html){$('sheet').innerHTML=html;$('modal').classList.add('open')}function closeModal(){$('modal').classList.remove('open')}
-function receipt(s){return [settings.storeName,'TICKET Nº '+(s.ticketNumber??'PENDENTE'),'------------------------------',...s.items.map(i=>`${i.qty} x ${i.name}  ${money(i.price*i.qty)}`),'------------------------------','TOTAL: '+money(s.total),'Pagamento: '+s.payment,'Obrigado pela preferência!'].join('\n')}
-function printReceipt(s){let text=receipt(s);if(localStorage.getItem('pdv-print')==='rawbt'&&/Android/i.test(navigator.userAgent)){location.href='rawbt:base64,'+btoa(unescape(encodeURIComponent(text)));return}let w=window.open('','_blank');if(w){w.document.write('<pre style="font:14px monospace;white-space:pre-wrap">'+esc(text)+'</pre>');w.print();w.close()}}
-if(firebaseReady){auth.onAuthStateChanged(async u=>{user=u;renderAuth(authNotice);if(u){authNotice='';await load()}else{$('view').innerHTML=''}})}else{renderAuth()}
-</script></body></html>
+
+/* ============================================================
+   ESTADO
+============================================================ */
+let state = {
+  products: [],
+  sales: [],
+  cashSessions: [], // histórico de sessões de caixa fechadas
+  cash: { isOpen:false, openedAt:null, openingAmount:0, movements:[] }, // sessão atual
+  config: { storeName:"Minha Loja", cnpj:"", address:"", phone:"", footer:"Obrigado pela preferência!", themeColor:"#8A6D46" },
+  users: [] // {id, username, passwordHash, role: 'admin'|'comum'}
+};
+/* Configuração de impressão: fica SÓ neste aparelho (localStorage), nunca
+   sincronizada pela nuvem. Cada celular/computador tem sua própria impressora
+   conectada de um jeito diferente (QZ Tray só existe no computador que o tem
+   instalado, RawBT só existe no Android daquele aparelho específico) — se
+   isso fosse compartilhado, um aparelho ficaria tentando usar a configuração
+   de impressão de outro aparelho e travando sem aviso. */
+let localSettings = { printMethod: 'dialog', qzPrinterName: null };
+function loadLocalSettings(){
+  try{
+    const raw = localStorage.getItem('pdv-local-settings');
+    if(raw) localSettings = Object.assign(localSettings, JSON.parse(raw));
+  }catch(e){ /* usa os padrões */ }
+}
+function saveLocalSettings(){
+  try{ localStorage.setItem('pdv-local-settings', JSON.stringify(localSettings)); }catch(e){}
+}
+let currentUser = null; // sessão atual (não persiste — precisa logar de novo ao reabrir o app)
+let userProfile = null; // perfil (role) vindo do Firestore, quando logado via Firebase Authentication
+let cart = []; // {productId, name, price, qty}
+let activeTab = 'venda';
+let lastReceipt = null;
+
+const fmt = v => (v||0).toLocaleString('pt-BR', {style:'currency', currency:'BRL'});
+/* Números de ticket começam em 20261 e nunca se repetem — mesmo que o
+   contador salvo esteja mais baixo (ex: de testes antigos), o próximo
+   número nunca fica abaixo desse início. */
+const TICKET_START = 20260; // o primeiro ticket emitido será 20261
+function nextTicketNumber(){
+  const base = Math.max(state.ticketCounter || 0, TICKET_START);
+  return base + 1;
+}
+/* Retorna a lista de pagamentos de uma venda: [{method, amount}, ...].
+   Funciona tanto com vendas novas (pagamento dividido) quanto com vendas
+   antigas, que só tinham uma forma de pagamento única (sale.payment). */
+function salePayments(s){
+  return (s.payments && s.payments.length) ? s.payments : [{ method: s.payment, amount: s.total }];
+}
+/* Lê o valor de um campo de dinheiro com segurança. Em muitos tablets/celulares
+   Android, o teclado numérico digita vírgula como separador decimal, mas
+   <input type="number"> só aceita ponto — isso fazia o campo "esvaziar"
+   silenciosamente e o troco nunca calcular. Esta função aceita os dois. */
+function readMoneyInput(id){
+  const el = document.getElementById(id);
+  if(!el) return 0;
+  const raw = (el.value||'').toString().trim().replace(',', '.');
+  const v = parseFloat(raw);
+  return isNaN(v) ? 0 : v;
+}
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2,7);
+
+/* Camada de armazenamento: prioriza o Firestore (banco de dados compartilhado
+   na nuvem — assim os dados aparecem em qualquer aparelho que acessar o app).
+   Sempre também guarda uma cópia local (localStorage / window.storage), que
+   funciona como cache offline e como plano B caso o Firestore não responda. */
+/* Impede que qualquer promessa fique esperando resposta pra sempre (ex.: com
+   internet lenta/instável) — depois de "ms" milissegundos, desiste e segue
+   o fluxo normalmente usando os dados locais como reserva. */
+function withTimeout(promise, ms){
+  return Promise.race([
+    promise,
+    new Promise((_, reject)=> setTimeout(()=> reject(new Error('tempo esgotado')), ms))
+  ]);
+}
+let cloudFetchFailed = false; // true quando a nuvem está configurada mas não respondeu (rede instável, etc.)
+async function storageGet(key){
+  if(fbAvailable){
+    try{
+      const doc = await withTimeout(fbDb.collection('pdv').doc(key).get(), 4000);
+      cloudFetchFailed = false;
+      if(doc.exists && doc.data().value){
+        const val = doc.data().value;
+        try{ localStorage.setItem(key, val); }catch(e){}
+        return val;
+      }
+      return null; // documento realmente não existe na nuvem — banco vazio de verdade
+    }catch(e){
+      console.error('Firestore indisponível ou demorou demais — NÃO vou tratar isso como "banco vazio" pra não arriscar apagar dados reais.', e);
+      cloudFetchFailed = true;
+      return undefined; // sinaliza "não sei", diferente de null ("sei que está vazio")
+    }
+  }
+  if(window.storage){
+    try{ const r = await window.storage.get(key, false); return r ? r.value : null; }
+    catch(e){ /* segue pro fallback abaixo */ }
+  }
+  try{ return localStorage.getItem(key); }catch(e){ return null; }
+}
+async function storageSet(key, value){
+  let ok = false;
+  if(fbAvailable){
+    try{
+      await withTimeout(fbDb.collection('pdv').doc(key).set({ value, updatedAt: Date.now() }), 4000);
+      ok = true;
+      saveDailyBackup(value); // best-effort, não bloqueia nem afeta o salvamento principal
+    }catch(e){ console.error('Não foi possível salvar no Firestore (ou demorou demais)', e); }
+  }
+  try{ localStorage.setItem(key, value); ok = true; }catch(e){ /* ignora */ }
+  if(!ok && window.storage){
+    try{ await window.storage.set(key, value, false); ok = true; }catch(e){}
+  }
+  return ok;
+}
+/* Backup automático: uma cópia por dia, guardada separada do documento
+   principal. Se algo der errado com os dados de hoje, dá pra olhar o backup
+   de ontem (ou de outro dia) e recuperar manualmente. Roda em segundo plano,
+   sem travar nem interferir no salvamento normal. */
+function saveDailyBackup(value){
+  if(!fbAvailable) return;
+  const dayKey = todayISO();
+  fbDb.collection('pdv_backups').doc(dayKey).set({ value, savedAt: Date.now() })
+    .catch(e=> console.error('Backup diário não pôde ser salvo (não afeta o salvamento principal)', e));
+}
+/* Escuta mudanças em tempo real no Firestore — assim, se você cadastrar algo
+   em outro aparelho, este aqui atualiza sozinho, sem precisar recarregar. */
+function watchRemoteChanges(){
+  if(!fbAvailable) return;
+  fbDb.collection('pdv').doc('pdv-state').onSnapshot(doc=>{
+    if(!doc.exists) return;
+    if(doc.metadata.hasPendingWrites) return; // ignora o eco da própria escrita local
+    try{
+      const remoteState = JSON.parse(doc.data().value);
+      const defaultConfig = { ...state.config };
+      state = remoteState;
+      state.config = Object.assign({}, defaultConfig, remoteState.config || {});
+      // só revalida contra state.users no modo de login local antigo — no
+      // modo Firebase Authentication, os usuários vivem em outra coleção
+      // (pdv_users), então isso não se aplica.
+      if(currentUser && currentUser._authMode !== 'firebase'){
+        const stillExists = state.users.find(u=>u.id===currentUser.id);
+        currentUser = stillExists || null;
+      }
+      applyTheme(state.config.themeColor || '#8A6D46');
+      render();
+      renderAuthScreen();
+    }catch(e){ console.error('Erro ao aplicar atualização remota', e); }
+  }, err=> console.error('Erro na escuta em tempo real', err));
+}
+async function saveState(){
+  const ok = await storageSet('pdv-state', JSON.stringify(state));
+  if(!ok){
+    alert('⚠️ Não foi possível salvar. O armazenamento do navegador está cheio — geralmente por causa de fotos de produtos muito pesadas ou muito numerosas. Tente remover a foto de algum produto ou usar fotos menores, e salve novamente.');
+  }
+  return ok;
+}
+/* Aplica uma mudança de forma segura contra uso simultâneo em vários
+   aparelhos: busca a versão MAIS RECENTE direto do servidor (não a cópia
+   local, que pode estar desatualizada), aplica a alteração em cima dela, e
+   salva de volta — tudo de forma atômica (o Firestore garante isso via
+   transação). Assim, se dois aparelhos mexerem em estoque/caixa quase ao
+   mesmo tempo, nenhuma das duas mudanças se perde. */
+async function runStateTransaction(mutatorFn){
+  if(!fbAvailable){
+    // sem nuvem disponível agora: aplica local e salva do jeito de sempre
+    mutatorFn(state);
+    await saveState();
+    render();
+    return true;
+  }
+  try{
+    const docRef = fbDb.collection('pdv').doc('pdv-state');
+    await withTimeout(fbDb.runTransaction(async (tx)=>{
+      const doc = await tx.get(docRef);
+      let freshState;
+      try{ freshState = doc.exists ? JSON.parse(doc.data().value) : JSON.parse(JSON.stringify(state)); }
+      catch(e){ freshState = JSON.parse(JSON.stringify(state)); }
+      mutatorFn(freshState);
+      tx.set(docRef, { value: JSON.stringify(freshState), updatedAt: Date.now() });
+      state = freshState;
+    }), 8000);
+    try{ localStorage.setItem('pdv-state', JSON.stringify(state)); }catch(e){}
+    saveDailyBackup(JSON.stringify(state));
+    render();
+    return true;
+  }catch(e){
+    console.error('Não foi possível confirmar essa alteração de forma sincronizada com o servidor', e);
+    alert('⚠️ Não foi possível confirmar essa alteração com o servidor agora (conexão instável). Ela foi aplicada só neste aparelho — pode não estar sincronizada com os outros até a conexão melhorar.');
+    mutatorFn(state);
+    await saveState();
+    render();
+    return false;
+  }
+}
+/* Hash da senha padrão de fábrica (Zv8n90x2@@), pré-calculado — o texto puro
+   nunca fica no código, só o hash. Usado para criar a conta "admin" padrão
+   automaticamente quando o app roda pela primeira vez em um dispositivo. */
+const DEFAULT_ADMIN_HASH = 'bdf79d3215a4ec6b363845b9b77adfea852491064a7eb8ba18c51090c1a79ba9';
+
+/* ============================================================
+   TEMA DE COR
+============================================================ */
+/* Clareia (percent > 0) ou escurece (percent < 0) uma cor hex, misturando
+   com branco ou preto na proporção indicada. */
+function shadeColor(hex, percent){
+  let f = parseInt(hex.slice(1),16), t = percent<0 ? 0 : 255, p = percent<0 ? percent*-1 : percent;
+  let R = f>>16, G = f>>8 & 0x00FF, B = f & 0x0000FF;
+  return "#" + (0x1000000 + (Math.round((t-R)*p)+R)*0x10000 + (Math.round((t-G)*p)+G)*0x100 + (Math.round((t-B)*p)+B)).toString(16).slice(1);
+}
+function applyTheme(hex){
+  if(!hex) return;
+  const root = document.documentElement.style;
+  root.setProperty('--primary', hex);
+  root.setProperty('--primary-dark', shadeColor(hex, -0.28));
+  root.setProperty('--primary-light', shadeColor(hex, 0.85));
+}
+async function selectThemeColor(hex){
+  state.config.themeColor = hex;
+  applyTheme(hex);
+  await saveState();
+  render();
+}
+
+let creatingAccountGuard = false; // evita corrida entre criar conta manualmente e o disparo automático do login
+async function loadState(){
+  loadLocalSettings();
+  try{ await initFirebase(); }catch(e){ console.error('Erro ao iniciar Firebase', e); }
+
+  if(fbAvailable && window.firebase && firebase.auth){
+    // Com o Firebase disponível, o login passa a ser via Firebase Authentication.
+    // As regras do Firestore agora exigem estar autenticado, então só carregamos
+    // os dados do app DEPOIS que o login for confirmado.
+    firebase.auth().onAuthStateChanged((user)=>{
+      if(creatingAccountGuard) return; // estamos no meio de uma criação manual de conta
+      if(user) handleFirebaseSignedIn(user);
+      else{
+        currentUser = null;
+        userProfile = null;
+        try{ render(); }catch(e){}
+        try{ renderAuthScreen(); }catch(e){}
+      }
+    });
+    return;
+  }
+
+  // Sem Firebase disponível agora: mantém o sistema antigo (usuários locais
+  // com senha em hash), só pra funcionar nesse caso raro (offline/local).
+  await loadLocalOnlyState();
+}
+async function handleFirebaseSignedIn(user){
+  try{
+    const profileDoc = await withTimeout(fbDb.collection('pdv_users').doc(user.uid).get(), 6000);
+    if(!profileDoc.exists){
+      await firebase.auth().signOut();
+      currentUser = null; userProfile = null;
+      alert('Seu acesso ainda não foi configurado ou foi removido. Fale com o administrador.');
+      render(); renderAuthScreen();
+      return;
+    }
+    userProfile = profileDoc.data();
+    currentUser = { id:user.uid, username:user.email, role:userProfile.role, _authMode:'firebase' };
+  }catch(e){
+    console.error('Não foi possível carregar seu perfil de acesso', e);
+    render();
+    showCloudRetryScreen();
+    return;
+  }
+
+  const defaultConfig = { ...state.config };
+  try{
+    const raw = await storageGet('pdv-state');
+    if(raw){
+      const saved = JSON.parse(raw);
+      state = Object.assign(state, saved);
+      state.config = Object.assign({}, defaultConfig, saved.config || {});
+    }
+  }catch(e){ console.error('Erro ao carregar dados salvos', e); }
+
+  if(cloudFetchFailed){
+    render();
+    showCloudRetryScreen();
+    return;
+  }
+
+  try{ applyTheme(state.config.themeColor || '#8A6D46'); }catch(e){ console.error('Erro ao aplicar tema', e); }
+  try{ render(); }catch(e){ console.error('Erro ao renderizar o app', e); }
+  try{ renderAuthScreen(); }catch(e){ console.error('Erro ao mostrar tela de login', e); }
+  try{ watchRemoteChanges(); }catch(e){ console.error('Erro ao iniciar sincronização em tempo real', e); }
+}
+async function loadLocalOnlyState(){
+  const defaultConfig = { ...state.config };
+  let raw;
+  try{
+    raw = await storageGet('pdv-state');
+    if(raw){
+      const saved = JSON.parse(raw);
+      state = Object.assign(state, saved);
+      state.config = Object.assign({}, defaultConfig, saved.config || {});
+    }
+  }catch(e){
+    console.error('Erro ao carregar dados salvos', e);
+  }
+
+  // Se a nuvem está configurada mas não respondeu agora, NÃO seguimos como se o
+  // banco estivesse vazio — isso poderia apagar dados reais por cima. Mostra uma
+  // tela de erro com "Tentar novamente" e não mexe em nada até conseguir ler de verdade.
+  if(fbAvailable && cloudFetchFailed){
+    render();
+    showCloudRetryScreen();
+    return;
+  }
+
+  try{
+    if(!state.users) state.users = [];
+    if(state.users.length===0){
+      state.users.push({ id: uid(), username:'admin', passwordHash: DEFAULT_ADMIN_HASH, role:'admin' });
+      await saveState();
+    }
+  }catch(e){ console.error('Erro ao preparar usuário padrão', e); }
+  try{ applyTheme(state.config.themeColor || '#8A6D46'); }catch(e){ console.error('Erro ao aplicar tema', e); }
+  // Garante que a tela sempre apareça, mesmo se algo acima falhar inesperadamente.
+  try{ render(); }catch(e){ console.error('Erro ao renderizar o app', e); }
+  try{ renderAuthScreen(); }catch(e){ console.error('Erro ao mostrar tela de login', e); }
+  try{ watchRemoteChanges(); }catch(e){ console.error('Erro ao iniciar sincronização em tempo real', e); }
+}
+
+/* ============================================================
+   NAVEGAÇÃO
+============================================================ */
+function setTab(tab){
+  if(tab==='config' && (!currentUser || currentUser.role!=='admin')){
+    alert('Acesso restrito ao administrador.');
+    return;
+  }
+  activeTab = tab;
+  document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  render();
+  if(tab==='config' && fbAvailable) loadFirebaseUserList();
+}
+function closeModal(){ document.getElementById('modalOverlay').classList.remove('show'); document.getElementById('modalBody').innerHTML=''; }
+function showModal(html){
+  document.getElementById('modalBody').innerHTML = '<div class="modal-handle"></div>' + html;
+  document.getElementById('modalOverlay').classList.add('show');
+}
+document.getElementById('modalOverlay').addEventListener('click', e=>{ if(e.target.id==='modalOverlay') closeModal(); });
+
+function updateAppbar(){
+  document.getElementById('storeTitle').textContent = state.config.storeName || 'PDV Fácil';
+  const el = document.getElementById('cashStatus');
+  const txt = document.getElementById('cashStatusText');
+  if(state.cash.isOpen){ el.classList.remove('closed'); txt.textContent='Caixa aberto'; }
+  else{ el.classList.add('closed'); txt.textContent='Caixa fechado'; }
+
+  const logoutBtn = document.getElementById('logoutBtn');
+  logoutBtn.style.display = currentUser ? 'flex' : 'none';
+
+  const isAdmin = currentUser && currentUser.role==='admin';
+  const configNav = document.querySelector('.navbtn[data-tab="config"]');
+  if(configNav) configNav.style.display = isAdmin ? 'flex' : 'none';
+}
+
+function render(){
+  updateAppbar();
+  document.querySelectorAll('.navbtn').forEach(b=>b.classList.toggle('active', b.dataset.tab===activeTab));
+  const v = document.getElementById('view');
+  if(activeTab==='venda') v.innerHTML = renderVenda();
+  else if(activeTab==='produtos') v.innerHTML = renderProdutos();
+  else if(activeTab==='caixa') v.innerHTML = renderCaixa();
+  else if(activeTab==='troca') v.innerHTML = renderTroca();
+  else if(activeTab==='historico'){ v.innerHTML = renderHistorico(); drawHistoricoChart(); drawProductChart(); }
+  else if(activeTab==='config') v.innerHTML = renderConfig();
+  renderCartBar();
+}
+
+/* ============================================================
+   AUTENTICAÇÃO
+============================================================ */
+async function hashPw(pw){
+  try{
+    const enc = new TextEncoder().encode(pw);
+    const buf = await crypto.subtle.digest('SHA-256', enc);
+    return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+  }catch(e){
+    // fallback simples caso crypto.subtle não esteja disponível (ex: página sem HTTPS)
+    let h = 0;
+    for(let i=0;i<pw.length;i++){ h = ((h<<5)-h + pw.charCodeAt(i))|0; }
+    return 'fb_' + h;
+  }
+}
+function showCloudRetryScreen(){
+  const box = document.getElementById('authScreen');
+  box.style.display = 'flex';
+  box.innerHTML = `
+    <div class="auth-card">
+      <div class="auth-logo" style="background:var(--danger);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>
+      <h2>Não foi possível conectar</h2>
+      <p class="small muted">O app não conseguiu confirmar seus dados na nuvem agora (pode ser a internet). Por segurança, não vou continuar até garantir que estou vendo os dados certos — assim nada é apagado por engano.</p>
+      <button class="btn btn-primary" style="margin-top:10px;" onclick="retryCloudLoad()">Tentar novamente</button>
+    </div>
+  `;
+}
+async function retryCloudLoad(){
+  cloudFetchFailed = false;
+  await loadState();
+}
+function renderAuthScreen(){
+  const box = document.getElementById('authScreen');
+  if(fbAvailable && window.firebase && firebase.auth){
+    if(currentUser){ box.style.display = 'none'; updateAppbar(); return; }
+    box.style.display = 'flex';
+    box.innerHTML = window._showFirstAdminSetup ? renderFirebaseSetupAdmin() : renderFirebaseLogin();
+    updateAppbar();
+    return;
+  }
+  if(!state.users || state.users.length===0){
+    box.style.display = 'flex';
+    box.innerHTML = renderLocalSetupAdmin();
+  } else if(!currentUser){
+    box.style.display = 'flex';
+    box.innerHTML = renderLocalLogin();
+  } else {
+    box.style.display = 'none';
+  }
+  updateAppbar();
+}
+/* ---- Login via Firebase Authentication (modo padrão, com internet) ---- */
+function renderFirebaseLogin(){
+  return `
+    <div class="auth-card">
+      <div class="auth-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+      <h2>${escapeHtml(state.config.storeName||'PDV Fácil')}</h2>
+      <p class="small muted">Entre com seu e-mail e senha</p>
+      <label>E-mail</label>
+      <input id="login_email" type="email" autocomplete="off">
+      <label>Senha</label>
+      <input id="login_pass" type="password" onkeydown="if(event.key==='Enter') doFirebaseLogin();">
+      <div id="loginError" class="small" style="color:var(--danger); margin-top:6px;"></div>
+      <button class="btn btn-primary" style="margin-top:16px;" onclick="doFirebaseLogin()">Entrar</button>
+      <button class="btn btn-outline btn-sm" style="margin-top:10px; width:100%;" onclick="doForgotPassword()">Esqueci minha senha</button>
+      <button class="btn btn-ghost btn-sm" style="margin-top:6px; width:100%;" onclick="window._showFirstAdminSetup=true; renderAuthScreen();">Primeira vez? Criar conta de administrador</button>
+    </div>
+  `;
+}
+function renderFirebaseSetupAdmin(){
+  return `
+    <div class="auth-card">
+      <div class="auth-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+      <h2>Criar administrador</h2>
+      <p class="small muted">Crie a primeira conta de administrador do sistema, com um e-mail de verdade (é o que permite recuperar a senha depois, se esquecer).</p>
+      <label>E-mail</label>
+      <input id="setup_email" type="email" autocomplete="off">
+      <label>Senha</label>
+      <input id="setup_pass" type="password" placeholder="mínimo 6 caracteres">
+      <label>Confirmar senha</label>
+      <input id="setup_pass2" type="password">
+      <div id="setupError" class="small" style="color:var(--danger); margin-top:6px;"></div>
+      <button class="btn btn-primary" style="margin-top:16px;" onclick="createFirebaseAdminAccount()">Criar conta e entrar</button>
+      <button class="btn btn-ghost btn-sm" style="margin-top:10px; width:100%;" onclick="window._showFirstAdminSetup=false; renderAuthScreen();">Já tenho conta, voltar pro login</button>
+    </div>
+  `;
+}
+async function createFirebaseAdminAccount(){
+  const email = document.getElementById('setup_email').value.trim();
+  const pass = document.getElementById('setup_pass').value;
+  const pass2 = document.getElementById('setup_pass2').value;
+  const err = document.getElementById('setupError');
+  if(!email || pass.length<6){ err.textContent = 'Preencha o e-mail e uma senha com pelo menos 6 caracteres.'; err.style.display='block'; return; }
+  if(pass!==pass2){ err.textContent = 'As senhas não coincidem.'; err.style.display='block'; return; }
+  creatingAccountGuard = true;
+  try{
+    const cred = await firebase.auth().createUserWithEmailAndPassword(email, pass);
+    await fbDb.collection('pdv_users').doc(cred.user.uid).set({ email, role:'admin', createdAt: Date.now() });
+    creatingAccountGuard = false;
+    window._showFirstAdminSetup = false;
+    await handleFirebaseSignedIn(cred.user);
+  }catch(e){
+    creatingAccountGuard = false;
+    err.textContent = translateFirebaseAuthError(e);
+    err.style.display = 'block';
+  }
+}
+async function doFirebaseLogin(){
+  const email = document.getElementById('login_email').value.trim();
+  const pass = document.getElementById('login_pass').value;
+  const err = document.getElementById('loginError');
+  try{
+    await firebase.auth().signInWithEmailAndPassword(email, pass);
+    // o onAuthStateChanged cuida do resto (carregar perfil e dados)
+  }catch(e){
+    err.textContent = translateFirebaseAuthError(e);
+    err.style.display = 'block';
+  }
+}
+async function doForgotPassword(){
+  const email = document.getElementById('login_email').value.trim();
+  if(!email){ alert('Digite seu e-mail no campo acima primeiro, depois toque em "Esqueci minha senha".'); return; }
+  try{
+    await firebase.auth().sendPasswordResetEmail(email);
+    alert('Enviamos um link de redefinição de senha pro seu e-mail. Confira a caixa de entrada (e o spam).');
+  }catch(e){
+    alert(translateFirebaseAuthError(e));
+  }
+}
+function translateFirebaseAuthError(e){
+  const map = {
+    'auth/email-already-in-use': 'Esse e-mail já está cadastrado.',
+    'auth/invalid-email': 'E-mail inválido.',
+    'auth/weak-password': 'Senha muito fraca (mínimo 6 caracteres).',
+    'auth/user-not-found': 'E-mail ou senha incorretos.',
+    'auth/wrong-password': 'E-mail ou senha incorretos.',
+    'auth/invalid-credential': 'E-mail ou senha incorretos.',
+    'auth/too-many-requests': 'Muitas tentativas. Aguarde um pouco e tente de novo.'
+  };
+  return map[e.code] || ('Erro: ' + e.message);
+}
+/* ---- Login local antigo (reserva — só usado se o Firebase estiver indisponível) ---- */
+function renderLocalSetupAdmin(){
+  return `
+    <div class="auth-card">
+      <div class="auth-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+      <h2>Bem-vindo(a)!</h2>
+      <p class="small muted">Crie a conta de administrador para proteger o app com senha. Só quem souber essa senha vai poder acessar.</p>
+      <label>Usuário</label>
+      <input id="setup_user" placeholder="ex: admin" autocomplete="off">
+      <label>Senha</label>
+      <input id="setup_pass" type="password" placeholder="mínimo 4 caracteres">
+      <label>Confirmar senha</label>
+      <input id="setup_pass2" type="password">
+      <div id="setupError" class="small" style="color:var(--danger); margin-top:6px;"></div>
+      <button class="btn btn-primary" style="margin-top:16px;" onclick="createLocalAdminAccount()">Criar conta e entrar</button>
+    </div>
+  `;
+}
+async function createLocalAdminAccount(){
+  const username = document.getElementById('setup_user').value.trim();
+  const pass = document.getElementById('setup_pass').value;
+  const pass2 = document.getElementById('setup_pass2').value;
+  const err = document.getElementById('setupError');
+  if(!username || pass.length<4){ err.textContent = 'Preencha o usuário e uma senha com pelo menos 4 caracteres.'; return; }
+  if(pass!==pass2){ err.textContent = 'As senhas não coincidem.'; return; }
+  const passwordHash = await hashPw(pass);
+  const admin = { id: uid(), username, passwordHash, role:'admin' };
+  state.users.push(admin);
+  await saveState();
+  currentUser = admin;
+  activeTab = 'venda';
+  renderAuthScreen();
+  render();
+}
+function renderLocalLogin(){
+  return `
+    <div class="auth-card">
+      <div class="auth-logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+      <h2>${escapeHtml(state.config.storeName||'PDV Fácil')}</h2>
+      <p class="small muted">Entre com seu usuário e senha</p>
+      <label>Usuário</label>
+      <input id="login_user" autocomplete="off" placeholder="admin">
+      <label>Senha</label>
+      <input id="login_pass" type="password" onkeydown="if(event.key==='Enter') doLocalLogin();">
+      <div id="loginError" class="small" style="color:var(--danger); margin-top:6px;"></div>
+      <button class="btn btn-primary" style="margin-top:16px;" onclick="doLocalLogin()">Entrar</button>
+    </div>
+  `;
+}
+async function doLocalLogin(){
+  const username = document.getElementById('login_user').value.trim();
+  const pass = document.getElementById('login_pass').value;
+  const err = document.getElementById('loginError');
+  const passwordHash = await hashPw(pass);
+  const user = state.users.find(u=> u.username.toLowerCase()===username.toLowerCase() && u.passwordHash===passwordHash);
+  if(!user){ err.textContent = 'Usuário ou senha incorretos.'; return; }
+  currentUser = user;
+  activeTab = 'venda';
+  renderAuthScreen();
+  render();
+}
+function confirmLogout(){
+  showModal(`
+    <h3>Sair do app</h3>
+    <p class="small muted">Você vai precisar da senha de novo pra voltar a usar o app.</p>
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-danger" onclick="doLogout()">Sair</button>
+    </div>
+  `);
+}
+async function doLogout(){
+  closeModal();
+  if(fbAvailable && window.firebase && firebase.auth && firebase.auth().currentUser){
+    await firebase.auth().signOut();
+  } else {
+    currentUser = null;
+    renderAuthScreen();
+  }
+}
+/* Confirma a senha do usuário logado no momento — funciona tanto com Firebase
+   Authentication (reautentica de verdade) quanto com o sistema local antigo
+   (compara o hash salvo). Usado antes de ações destrutivas (apagar tudo,
+   restaurar backup). */
+async function verifyCurrentUserPassword(password){
+  if(!currentUser) return false;
+  if(currentUser._authMode === 'firebase'){
+    try{
+      const cred = firebase.auth.EmailAuthProvider.credential(currentUser.username, password);
+      await firebase.auth().currentUser.reauthenticateWithCredential(cred);
+      return true;
+    }catch(e){ return false; }
+  }
+  const hash = await hashPw(password);
+  return hash === currentUser.passwordHash;
+}
+
+/* ============================================================
+   VENDA
+============================================================ */
+function renderVenda(){
+  if(!state.cash.isOpen){
+    return `<div class="empty">
+      <div style="font-size:38px;margin-bottom:8px;">🔒</div>
+      <div style="font-weight:700;color:var(--text);margin-bottom:4px;">Caixa fechado</div>
+      <div class="small">Abra o caixa na aba <b>Caixa</b> para iniciar as vendas.</div>
+      <div style="margin-top:16px;"><button class="btn btn-primary" onclick="setTab('caixa')" style="width:auto;padding:12px 20px;">Ir para Caixa</button></div>
+    </div>`;
+  }
+  const q = (window._searchQ||'').toLowerCase();
+  const isAvailable = p => p.alwaysAvailable || p.stock === null || p.stock === undefined || p.stock > 0;
+  const list = state.products.filter(p=> isAvailable(p) && (!q || p.name.toLowerCase().includes(q) || (p.barcode||'').includes(q)));
+
+  const catOf = p => (p.category && p.category.trim()) || 'Sem categoria';
+  const allCategories = [...new Set(state.products.filter(isAvailable).map(catOf))].sort((a,b)=>{
+    if(a==='Sem categoria') return 1;
+    if(b==='Sem categoria') return -1;
+    return a.localeCompare(b,'pt-BR');
+  });
+  const selectedCat = window._selectedCategory || null;
+
+  const chips = allCategories.length>1 ? `
+    <div class="cat-chips">
+      <button class="cat-chip ${!selectedCat?'selected':''}" onclick="window._selectedCategory=null; render();">Todas</button>
+      ${allCategories.map(c=>`<button class="cat-chip ${selectedCat===c?'selected':''}" onclick='window._selectedCategory=${JSON.stringify(c).replace(/'/g,"&#39;")}; render();'>${escapeHtml(c)}</button>`).join('')}
+    </div>` : '';
+
+  const tileHtml = p => `
+    <button class="prod-tile" onclick="openQtyModal('${p.id}')">
+      ${p.photo ? `<img class="prod-photo" src="${p.photo}" alt="">` : `<div class="prod-photo-placeholder">${cameraIcon()}</div>`}
+      <div class="ptext">
+        <div class="pname">${escapeHtml(p.name)}</div>
+        <div class="pprice">${fmt(p.price)}</div>
+        <div class="pstock">${p.stock!=null && p.stock<=0 ? '<span style="color:var(--accent);font-weight:700;">Sem estoque</span>' : 'Estoque: '+(p.stock ?? '-')}</div>
+      </div>
+    </button>`;
+
+  let body;
+  if(!list.length){
+    body = `<div class="empty">Nenhum produto disponível.<br>Cadastre ou reponha estoque na aba <b>Cadastro</b>.</div>`;
+  } else if(selectedCat){
+    const filtered = list.filter(p=>catOf(p)===selectedCat);
+    body = filtered.length
+      ? `<div class="prod-grid">${filtered.map(tileHtml).join('')}</div>`
+      : `<div class="empty">Nenhum produto nessa categoria.</div>`;
+  } else {
+    body = `<div class="prod-grid">${list.map(tileHtml).join('')}</div>`;
+  }
+
+  return `
+    <input id="searchBox" placeholder="🔍 Buscar produto ou código..." value="${window._searchQ||''}" oninput="window._searchQ=this.value; render();">
+    ${chips}
+    ${body}
+  `;
+}
+function renderCartItem(it, i){
+  const hasDiscount = it.originalPrice!==undefined && it.originalPrice!==it.price;
+  return `<div class="cart-item">
+    <div>
+      <div class="ci-name">${escapeHtml(it.name)}</div>
+      <div class="ci-price">${hasDiscount?`<span style="text-decoration:line-through;opacity:.55;margin-right:5px;">${fmt(it.originalPrice)}</span>`:''}${fmt(it.price)} cada${hasDiscount?' <span class="badge orange">desconto</span>':''}</div>
+    </div>
+    <div class="qty-ctrl">
+      <button onclick="changeQty(${i},-1)">−</button>
+      <span>${it.qty}</span>
+      <button onclick="changeQty(${i},1)">+</button>
+    </div>
+    <div style="font-weight:700;min-width:64px;text-align:right;">${fmt(it.price*it.qty)}</div>
+    <button class="icon-btn" onclick="openEditPriceModal(${i})" title="Alterar preço">💲</button>
+    <button class="icon-btn" onclick="removeCartItem(${i})" title="Remover">✕</button>
+  </div>`;
+}
+/* ---- Adicionar produto com quantidade ---- */
+/* Quantidade máxima que pode ser vendida deste produto de uma vez: limitada
+   ao estoque, exceto quando o produto está marcado como "sempre disponível"
+   ou não tem controle de estoque (stock null). */
+function maxQtyForProduct(p){
+  if(!p) return 1;
+  if(p.alwaysAvailable || p.stock==null) return Infinity;
+  return Math.max(0, p.stock);
+}
+function openQtyModal(pid){
+  const p = state.products.find(x=>x.id===pid);
+  if(!p) return;
+  const max = maxQtyForProduct(p);
+  const existing = cart.find(c=>c.productId===pid);
+  const startQty = Math.min(existing ? existing.qty : 1, max===Infinity?1e9:max) || 1;
+  const startPrice = existing ? existing.price : p.price;
+  const maxLabel = max===Infinity ? '' : `<div class="small muted" style="text-align:center;margin-top:4px;">Máximo disponível: ${max}</div>`;
+  showModal(`
+    <h3>${escapeHtml(p.name)}</h3>
+    ${p.photo ? `<img src="${p.photo}" style="width:100%;max-height:160px;object-fit:cover;border-radius:12px;margin-bottom:10px;">` : ''}
+    <label>Preço unitário</label>
+    <input id="qtyModalPriceInput" type="text" inputmode="decimal" value="${startPrice.toFixed(2).replace('.',',')}" style="font-size:18px;font-weight:800;color:var(--primary);" oninput="updateQtySubtotal()">
+    <div class="small muted" id="qtyOriginalPriceNote" style="margin-top:4px; display:${startPrice!==p.price?'block':'none'};">Preço de cadastro: ${fmt(p.price)}</div>
+    <label style="margin-top:14px;">Quantidade</label>
+    <div class="qty-ctrl" style="justify-content:center;gap:18px;margin:10px 0 4px;">
+      <button style="width:44px;height:44px;font-size:22px;" onclick="stepQtyModal(-1)">−</button>
+      <input id="qtyModalInput" type="number" min="1" ${max!==Infinity?`max="${max}"`:''} value="${startQty}" style="text-align:center;width:80px;font-size:18px;font-weight:700;" oninput="updateQtySubtotal()">
+      <button style="width:44px;height:44px;font-size:22px;" onclick="stepQtyModal(1)">+</button>
+    </div>
+    ${maxLabel}
+    <div class="row" style="margin-top:10px;"><span class="muted small">Subtotal</span><span id="qtySubtotal" style="font-weight:800;">${fmt(startPrice*startQty)}</span></div>
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmAddQty('${pid}')">Adicionar ao carrinho</button>
+    </div>
+  `);
+  window._qtyModalOriginalPrice = p.price;
+  window._qtyModalMax = max;
+}
+function stepQtyModal(delta){
+  const input = document.getElementById('qtyModalInput');
+  const max = window._qtyModalMax===Infinity ? Infinity : window._qtyModalMax;
+  let v = (parseInt(input.value)||1) + delta;
+  if(v<1) v=1;
+  if(max!==Infinity && v>max) v=max;
+  input.value = v;
+  updateQtySubtotal(window._qtyModalPrice);
+}
+function updateQtySubtotal(){
+  const max = window._qtyModalMax===Infinity ? Infinity : window._qtyModalMax;
+  const qtyInput = document.getElementById('qtyModalInput');
+  let v = Math.max(1, parseInt(qtyInput.value)||1);
+  if(max!==Infinity && v>max){ v=max; }
+  qtyInput.value = v;
+  const price = readMoneyInput('qtyModalPriceInput');
+  document.getElementById('qtySubtotal').textContent = fmt(price*v);
+  const note = document.getElementById('qtyOriginalPriceNote');
+  if(note) note.style.display = (price!==window._qtyModalOriginalPrice) ? 'block' : 'none';
+}
+function confirmAddQty(pid){
+  const p = state.products.find(x=>x.id===pid);
+  if(!p) return;
+  const max = maxQtyForProduct(p);
+  let qty = Math.max(1, parseInt(document.getElementById('qtyModalInput').value)||1);
+  if(max!==Infinity) qty = Math.min(qty, max);
+  const price = readMoneyInput('qtyModalPriceInput');
+  const existing = cart.find(c=>c.productId===pid);
+  if(existing){
+    existing.qty = qty;
+    existing.price = price;
+    if(price!==p.price) existing.originalPrice = p.price; else delete existing.originalPrice;
+  } else {
+    const item = {productId:pid, name:p.name, price, qty};
+    if(price!==p.price) item.originalPrice = p.price;
+    cart.push(item);
+  }
+  closeModal();
+  render();
+}
+function changeQty(i, delta){
+  const item = cart[i];
+  const p = state.products.find(x=>x.id===item.productId);
+  const max = maxQtyForProduct(p);
+  let newQty = item.qty + delta;
+  if(max!==Infinity && newQty>max) newQty = max;
+  item.qty = newQty;
+  if(item.qty<=0) cart.splice(i,1);
+  render();
+  if(document.getElementById('cartReviewList')) renderCartReview();
+}
+function removeCartItem(i){
+  cart.splice(i,1);
+  render();
+  if(document.getElementById('cartReviewList')) renderCartReview();
+}
+/* ---- Alterar preço do item na venda (desconto pontual) ----
+   Muda só o item que está no carrinho desta venda; o preço cadastrado do
+   produto não é alterado, e a próxima venda volta a usar o preço normal. */
+function openEditPriceModal(i){
+  const item = cart[i];
+  if(!item) return;
+  const original = item.originalPrice !== undefined ? item.originalPrice : item.price;
+  showModal(`
+    <h3>Alterar preço</h3>
+    <div class="muted small">${escapeHtml(item.name)}</div>
+    <div class="muted small" style="margin-top:8px;">Preço de cadastro</div>
+    <div style="font-size:16px;font-weight:700;margin-bottom:12px;">${fmt(original)}</div>
+    <label>Novo preço unitário (vale só nesta venda)</label>
+    <input type="text" inputmode="decimal" id="editPriceInput" value="${item.price.toFixed(2).replace('.',',')}" placeholder="0,00">
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn btn-outline" onclick="openCartReview()">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmEditPrice(${i})">Aplicar</button>
+    </div>
+    ${item.originalPrice!==undefined && item.originalPrice!==item.price ? `<button class="btn btn-ghost btn-sm" style="margin-top:10px;width:100%;" onclick="resetItemPrice(${i})">Restaurar preço de cadastro (${fmt(item.originalPrice)})</button>` : ''}
+  `);
+}
+function confirmEditPrice(i){
+  const item = cart[i];
+  if(!item) return;
+  const val = readMoneyInput('editPriceInput');
+  if(val<0){ alert('Informe um preço válido.'); return; }
+  if(item.originalPrice===undefined) item.originalPrice = item.price;
+  item.price = val;
+  openCartReview();
+}
+function resetItemPrice(i){
+  const item = cart[i];
+  if(!item) return;
+  if(item.originalPrice!==undefined) item.price = item.originalPrice;
+  openCartReview();
+}
+function cartTotal(){ return cart.reduce((s,i)=>s+i.price*i.qty,0); }
+function renderCartBar(){
+  const bar = document.getElementById('cartBar');
+  if(activeTab==='venda' && cart.length){
+    bar.classList.add('show');
+    document.getElementById('cartInfo').textContent = cart.reduce((s,i)=>s+i.qty,0) + ' itens';
+    document.getElementById('cartTotal').textContent = fmt(cartTotal());
+  } else bar.classList.remove('show');
+}
+
+/* ---- Revisão do carrinho (lista antes de confirmar) ---- */
+function openCartReview(){
+  if(!cart.length) return;
+  showModal(`
+    <h3>Confira a venda</h3>
+    <div id="cartReviewList">${cart.map((it,i)=>renderCartItem(it,i)).join('')}</div>
+    <div class="row" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--border);">
+      <span style="font-weight:700;">Total</span>
+      <span id="cartReviewTotal" style="font-size:19px;font-weight:800;color:var(--primary);">${fmt(cartTotal())}</span>
+    </div>
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn btn-outline" onclick="closeModal()">Continuar comprando</button>
+      <button class="btn btn-primary" onclick="closeModal(); openPaymentModal();">Ir para pagamento ▸</button>
+    </div>
+  `);
+}
+function renderCartReview(){
+  const list = document.getElementById('cartReviewList');
+  const totalEl = document.getElementById('cartReviewTotal');
+  if(!cart.length){ closeModal(); return; }
+  if(list) list.innerHTML = cart.map((it,i)=>renderCartItem(it,i)).join('');
+  if(totalEl) totalEl.textContent = fmt(cartTotal());
+  renderCartBar();
+}
+
+/* ---- Pagamento ---- */
+let selectedPayment = null;
+const PAY_METHODS = ['Dinheiro','Débito','Crédito','Pix'];
+function openPaymentModal(){
+  if(!cart.length) return;
+  selectedPayment = null;
+  window._splitMode = false;
+  window._splitPayments = [];
+  window._splitSelectedMethod = null;
+  showModal(renderPaymentModalContent());
+}
+function renderPaymentModalContent(){
+  const total = cartTotal();
+  if(!window._splitMode){
+    return `
+      <h3>Forma de pagamento</h3>
+      <div class="muted small">Total a receber</div>
+      <div style="font-size:26px;font-weight:800;color:var(--primary);margin-bottom:6px;">${fmt(total)}</div>
+      <div class="pay-grid" id="payGrid">
+        ${PAY_METHODS.map(p=>`<button class="pay-chip ${selectedPayment===p?'selected':''}" onclick="selectPayment('${p}')" id="pc-${p}">${p}</button>`).join('')}
+      </div>
+      <div id="cashCalc">${selectedPayment==='Dinheiro' ? cashCalcHtml() : ''}</div>
+      <button class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;" onclick="toggleSplitMode(true)">➗ Dividir em mais de uma forma de pagamento</button>
+      <div class="btn-row" style="margin-top:16px;">
+        <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+        <button class="btn btn-primary" id="confirmPayBtn" ${selectedPayment && selectedPayment!=='Dinheiro' ? '' : 'disabled'} onclick="confirmSale()">Confirmar venda</button>
+      </div>
+    `;
+  }
+  // ---- modo dividido ----
+  const paidSoFar = window._splitPayments.reduce((a,p)=>a+p.amount,0);
+  const remaining = +(total - paidSoFar).toFixed(2);
+  return `
+    <h3>Dividir pagamento</h3>
+    <div class="muted small">Total a receber</div>
+    <div style="font-size:22px;font-weight:800;color:var(--primary);margin-bottom:10px;">${fmt(total)}</div>
+    ${window._splitPayments.length ? `<div class="card" style="margin-bottom:10px;">
+      ${window._splitPayments.map((p,i)=>`
+        <div class="row" style="padding:6px 0;">
+          <span>${p.method}</span>
+          <span style="font-weight:700;display:flex;align-items:center;gap:8px;">${fmt(p.amount)} <button class="icon-btn" onclick="removeSplitPayment(${i})">✕</button></span>
+        </div>`).join('')}
+    </div>` : ''}
+    <div class="row" style="margin-bottom:14px;">
+      <span class="muted small">${remaining>0.004 ? 'Falta receber' : 'Tudo pago'}</span>
+      <span style="font-weight:800; color:${remaining>0.004?'var(--danger)':'var(--success)'};">${fmt(Math.abs(remaining))}</span>
+    </div>
+    ${remaining>0.004 ? `
+    <label>Forma de pagamento</label>
+    <div class="pay-grid">
+      ${PAY_METHODS.map(p=>`<button class="pay-chip ${window._splitSelectedMethod===p?'selected':''}" onclick="selectSplitMethod('${p}')">${p}</button>`).join('')}
+    </div>
+    <label>Valor</label>
+    <input type="text" inputmode="decimal" id="splitAmountInput" placeholder="0,00" value="${remaining.toFixed(2).replace('.',',')}">
+    <button class="btn btn-ghost" style="margin-top:10px;width:100%;" onclick="addSplitPayment()">+ Adicionar</button>
+    ` : ''}
+    <button class="btn btn-ghost btn-sm" style="margin-top:12px;width:100%;" onclick="toggleSplitMode(false)">Voltar para forma única</button>
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" ${remaining<=0.004 ? '' : 'disabled'} onclick="confirmSaleSplit()">Confirmar venda</button>
+    </div>
+  `;
+}
+function cashCalcHtml(){
+  return `
+    <label>Valor recebido</label>
+    <input type="text" inputmode="decimal" id="cashReceived" placeholder="0,00" oninput="calcTroco()">
+    <div class="row" style="margin-top:8px;"><span class="muted small">Troco</span><span id="trocoVal" style="font-weight:800;">R$ 0,00</span></div>
+    <div id="cashError" class="small" style="color:var(--danger); margin-top:6px; display:none;">O valor recebido é menor que o total da venda.</div>
+  `;
+}
+function selectPayment(p){
+  selectedPayment = p;
+  showModal(renderPaymentModalContent());
+}
+function calcTroco(){
+  const recv = readMoneyInput('cashReceived');
+  const total = cartTotal();
+  const troco = recv - total;
+  const trocoEl = document.getElementById('trocoVal');
+  if(trocoEl) trocoEl.textContent = fmt(Math.max(troco,0));
+  const err = document.getElementById('cashError');
+  const btn = document.getElementById('confirmPayBtn');
+  const ok = recv >= total;
+  if(err) err.style.display = ok ? 'none' : 'block';
+  if(btn) btn.disabled = !ok;
+}
+function toggleSplitMode(on){
+  window._splitMode = on;
+  window._splitPayments = window._splitPayments || [];
+  window._splitSelectedMethod = null;
+  selectedPayment = null;
+  showModal(renderPaymentModalContent());
+}
+function selectSplitMethod(p){
+  window._splitSelectedMethod = p;
+  showModal(renderPaymentModalContent());
+}
+function addSplitPayment(){
+  const method = window._splitSelectedMethod;
+  if(!method){ alert('Escolha a forma de pagamento.'); return; }
+  const amount = readMoneyInput('splitAmountInput');
+  if(amount<=0){ alert('Informe um valor válido.'); return; }
+  const total = cartTotal();
+  const paidSoFar = window._splitPayments.reduce((a,p)=>a+p.amount,0);
+  const remaining = total - paidSoFar;
+  if(method!=='Dinheiro' && amount > remaining + 0.005){
+    alert('Esse valor é maior que o restante a pagar. Cartão e Pix não têm troco, então o valor não pode passar do que ainda falta.');
+    return;
+  }
+  window._splitPayments.push({ method, amount });
+  window._splitSelectedMethod = null;
+  showModal(renderPaymentModalContent());
+}
+function removeSplitPayment(i){
+  window._splitPayments.splice(i,1);
+  showModal(renderPaymentModalContent());
+}
+async function confirmSale(){
+  if(!selectedPayment || !cart.length) return;
+  const total = cartTotal();
+  let received=null, troco=0;
+  if(selectedPayment==='Dinheiro'){
+    received = readMoneyInput('cashReceived');
+    if(received < total){ alert('O valor recebido é menor que o total da venda.'); return; }
+    troco = received - total;
+  }
+  const sale = {
+    id: uid(), date: new Date().toISOString(),
+    items: cart.map(c=>({...c})), total,
+    payments: [{ method: selectedPayment, amount: total }],
+    payment: selectedPayment,
+    received, troco, cancelled:false, exchanges:[]
+  };
+  await finalizeSale(sale);
+}
+async function confirmSaleSplit(){
+  const total = cartTotal();
+  const paidSoFar = window._splitPayments.reduce((a,p)=>a+p.amount,0);
+  if(paidSoFar + 0.005 < total){ alert('Ainda falta receber parte do pagamento.'); return; }
+  const troco = +(paidSoFar - total).toFixed(2);
+  const payments = window._splitPayments.map(p=>({...p}));
+  const cashReceivedTotal = payments.filter(p=>p.method==='Dinheiro').reduce((a,p)=>a+p.amount,0);
+  const sale = {
+    id: uid(), date: new Date().toISOString(),
+    items: cart.map(c=>({...c})), total,
+    payments,
+    payment: payments.length>1 ? 'Misto' : payments[0].method,
+    received: cashReceivedTotal || null,
+    troco,
+    cancelled:false, exchanges:[]
+  };
+  await finalizeSale(sale);
+}
+async function finalizeSale(sale){
+  await runStateTransaction((s)=>{
+    // atribui o número de ticket em cima do contador MAIS RECENTE do servidor,
+    // evitando que dois aparelhos deem o mesmo número numa venda simultânea
+    let nextTicket = Math.max(s.ticketCounter || 0, TICKET_START) + 1;
+    sale.items.forEach(it=>{
+      it.ticketStart = nextTicket;
+      nextTicket += it.qty;
+    });
+    s.ticketCounter = nextTicket - 1;
+
+    s.sales.push(sale);
+    // baixa de estoque em cima do estoque mais recente (não da cópia local)
+    sale.items.forEach(it=>{
+      const p = s.products.find(x=>x.id===it.productId);
+      if(p && typeof p.stock==='number') p.stock = Math.max(0, p.stock - it.qty);
+    });
+  });
+  lastReceipt = sale;
+  cart = [];
+  closeModal();
+  showReceiptModal(sale);
+  render();
+}
+
+/* ---- Ticket / Recibo ---- */
+function paperCharsWidth(){ return state.config.printerWidth === '80' ? 42 : 32; }
+/* Helpers de moldura (usa só +, - e | — funciona em qualquer impressora),
+   compartilhados entre o ticket de venda e o ticket de troca. */
+function makeBoxHelpers(W){
+  const innerW = W - 2;
+  const boxTop = () => '+' + '-'.repeat(innerW) + '+';
+  const boxBottom = boxTop;
+  const boxDivider = () => '|' + '-'.repeat(innerW) + '|';
+  const boxBlank = () => '|' + ' '.repeat(innerW) + '|';
+  const boxText = t => {
+    if(t.length<=innerW){
+      const pad = Math.max(0, Math.floor((innerW - t.length)/2));
+      return '|' + ' '.repeat(pad) + t + ' '.repeat(Math.max(0, innerW-pad-t.length)) + '|';
+    }
+    const words = t.split(' ');
+    const lines = [];
+    let cur = '';
+    words.forEach(w=>{
+      const test = cur ? cur+' '+w : w;
+      if(test.length>innerW){ if(cur) lines.push(cur); cur = w; }
+      else cur = test;
+    });
+    if(cur) lines.push(cur);
+    return lines.map(l=>{
+      const pad = Math.max(0, Math.floor((innerW-l.length)/2));
+      return '|' + ' '.repeat(pad) + l + ' '.repeat(Math.max(0,innerW-pad-l.length)) + '|';
+    }).join('\n');
+  };
+  const dottedSeparator = () => '\n' + '.'.repeat(W) + '\n\n';
+  return { boxTop, boxBottom, boxDivider, boxBlank, boxText, dottedSeparator };
+}
+function buildReceiptText(sale){
+  const c = state.config;
+  const W = paperCharsWidth();
+  const line = ch => ch.repeat(W);
+  const center = t => { const pad = Math.max(0, Math.floor((W - t.length)/2)); return ' '.repeat(pad)+t; };
+  const rowLR = (l,r) => l + ' '.repeat(Math.max(1, W-l.length-r.length)) + r;
+  const dateStr = new Date(sale.date).toLocaleString('pt-BR');
+
+  const { boxTop, boxBottom, boxDivider, boxBlank, boxText, dottedSeparator } = makeBoxHelpers(W);
+
+  let out = '';
+
+  // ---- um talão destacável por UNIDADE comprada (não por linha de item),
+  //      para permitir retiradas separadas, uma de cada vez ----
+  sale.items.forEach((it)=>{
+    for(let unit=1; unit<=it.qty; unit++){
+      const ticketNum = (it.ticketStart || 0) + (unit - 1);
+      out += boxTop() + '\n';
+      out += boxText(c.storeName||'Minha Loja') + '\n';
+      out += boxText(dateStr) + '\n';
+      out += boxDivider() + '\n';
+      out += boxBlank() + '\n';
+      out += boxText(it.name.toUpperCase()) + '\n';
+      out += boxBlank() + '\n';
+      out += boxText(fmt(it.price)) + '\n';
+      out += boxBlank() + '\n';
+      out += boxDivider() + '\n';
+      out += boxText('Ticket Nº ' + ticketNum) + '\n';
+      out += boxBottom() + '\n';
+      out += dottedSeparator();
+    }
+  });
+
+  // ---- talão final: resumo da venda (para o cliente guardar como comprovante) ----
+  out += boxTop() + '\n';
+  out += boxText(c.storeName||'Minha Loja') + '\n';
+  if(c.address) out += boxText(c.address) + '\n';
+  if(c.cnpj) out += boxText('CNPJ: '+c.cnpj) + '\n';
+  out += boxText(dateStr) + '\n';
+  out += boxDivider() + '\n';
+  out += boxBlank() + '\n';
+  sale.items.forEach(it=>{
+    out += boxText(it.name) + '\n';
+    if(it.originalPrice!==undefined && it.originalPrice!==it.price){
+      out += boxText(`(preco de cadastro: ${fmt(it.originalPrice)})`) + '\n';
+    }
+    out += boxText(`${it.qty} x ${fmt(it.price)} = ${fmt(it.price*it.qty)}`) + '\n';
+    if(it.ticketStart){
+      const ticketEnd = it.ticketStart + it.qty - 1;
+      const ticketLabel = it.qty>1 ? `Tickets Nº ${it.ticketStart} a ${ticketEnd}` : `Ticket Nº ${it.ticketStart}`;
+      out += boxText(ticketLabel) + '\n';
+    }
+  });
+  out += boxBlank() + '\n';
+  out += boxDivider() + '\n';
+  out += boxBlank() + '\n';
+  out += boxText('TOTAL: ' + fmt(sale.total)) + '\n';
+  if(sale.payment==='Misto'){
+    out += boxText('Pagamento dividido:') + '\n';
+    salePayments(sale).forEach(p=>{ out += boxText(p.method + ': ' + fmt(p.amount)) + '\n'; });
+  } else {
+    out += boxText('Pagamento: ' + sale.payment) + '\n';
+  }
+  if(sale.received){
+    out += boxText('Recebido em dinheiro: ' + fmt(sale.received)) + '\n';
+    if(sale.troco>0) out += boxText('Troco: ' + fmt(sale.troco)) + '\n';
+  }
+  out += boxBlank() + '\n';
+  out += boxText(c.footer||'Obrigado pela preferência!') + '\n';
+  out += boxBottom() + '\n';
+  return out;
+}
+function showReceiptModal(sale, title){
+  showModal(`
+    <h3>${title || 'Venda concluída ✅'}</h3>
+    <div id="receiptPaper">${buildReceiptText(sale)}</div>
+    <div class="btn-row" style="margin-top:14px;">
+      <button class="btn btn-outline" onclick="closeModal()">Fechar</button>
+      <button class="btn btn-primary" onclick="printReceipt()">🖨️ Imprimir</button>
+    </div>
+  `);
+}
+/* Ajusta o tamanho da página de impressão para o papel de bobina térmica
+   (largura fixa conforme configurado, altura automática = só o tamanho do
+   ticket, sem sobrar folha em branco). Precisa ser chamado antes de cada
+   window.print(). */
+function setupPrintLayout(){
+  const widthMm = state.config.printerWidth === '80' ? 80 : 58;
+  const sideMarginMm = 3.5;      // margem lateral de segurança
+  const topBottomMarginMm = 2;
+  const availableMm = widthMm - (sideMarginMm*2);
+  const chars = paperCharsWidth();
+  // largura média de um caractere em Courier New ≈ 0.62x o tamanho da fonte
+  const fontSizeMm = +(availableMm / (chars*0.62)).toFixed(2);
+
+  let styleEl = document.getElementById('dynamicPrintStyle');
+  if(!styleEl){
+    styleEl = document.createElement('style');
+    styleEl.id = 'dynamicPrintStyle';
+    document.head.appendChild(styleEl);
+  }
+  styleEl.textContent = `
+    @page{ size:${widthMm}mm auto; margin:0; }
+    @media print{
+      html, body{ margin:0 !important; padding:0 !important; height:auto !important; }
+      #printArea{
+        width:${widthMm}mm !important;
+        padding:${topBottomMarginMm}mm ${sideMarginMm}mm !important;
+        box-sizing:border-box;
+        font-size:${fontSizeMm}mm !important;
+        line-height:1.5 !important;
+        font-weight:700 !important;
+        -webkit-text-stroke:0.35px currentColor;
+        color:#000 !important;
+        word-break:break-word;
+      }
+    }
+  `;
+}
+/* Remove acentos e caracteres especiais do texto antes de mandar pra impressão
+   direta (RawBT / QZ Tray). Impressoras térmicas recebem texto puro, byte a
+   byte, e a maioria não entende acentuação em UTF-8 — sem isso, "ê" vira
+   "Ãª", espaços especiais viram "Â", etc. Removendo os acentos, o texto sai
+   certinho em qualquer impressora, independente da página de código dela. */
+function toPrinterSafeText(text){
+  return text
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // remove acentos (á,ê,ç,ã...)
+    .replace(/\u00A0/g, ' ')  // espaço especial -> espaço normal
+    .replace(/[^\x00-\x7E\n]/g, ''); // remove qualquer outro caractere fora do padrão básico
+}
+/* Envia o texto direto pro app RawBT (impressão térmica sem caixa de diálogo).
+   O RawBT precisa estar instalado e com a impressora configurada como padrão nele.
+   Só funciona no Android — não existe RawBT para computador. */
+function sendToRawBt(text){
+  const safeText = toPrinterSafeText(text);
+  const b64 = btoa(unescape(encodeURIComponent(safeText)));
+  const url = 'rawbt:base64,' + b64;
+  window.location.href = url;
+}
+function isAndroid(){ return /Android/i.test(navigator.userAgent); }
+
+/* ---- QZ Tray: impressão direta no computador, sem caixa de diálogo, mesmo
+   com o app rodando online. Exige o programa gratuito QZ Tray instalado e
+   aberto no computador (baixa em qz.io). O navegador conversa com ele por
+   uma conexão local — nenhuma instalação de sistema é necessária além disso. ---- */
+function loadQzTray(){
+  return new Promise((resolve, reject)=>{
+    if(window.qz){ resolve(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/qz-tray@2.2.4/qz-tray.js';
+    s.onload = ()=>resolve();
+    s.onerror = ()=>reject(new Error('Não foi possível carregar a biblioteca do QZ Tray. Verifique sua conexão com a internet.'));
+    document.head.appendChild(s);
+  });
+}
+function loadForge(){
+  return new Promise((resolve, reject)=>{
+    if(window.forge){ resolve(); return; }
+    const s = document.createElement('script');
+    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/forge/1.3.1/forge.min.js';
+    s.onload = ()=>resolve();
+    s.onerror = ()=>reject(new Error('Não foi possível carregar a biblioteca de assinatura digital.'));
+    document.head.appendChild(s);
+  });
+}
+/* Certificado digital próprio (autoassinado) do PDV Fácil — dá uma identidade
+   estável ao app perante o QZ Tray, para que "lembrar essa decisão" realmente
+   valha para sempre, em vez de perguntar de novo a cada sessão. Como este
+   projeto é público, esta chave também é pública — ela não protege dados,
+   serve só para essa identificação estável. */
+const QZ_CERTIFICATE = `-----BEGIN CERTIFICATE-----
+MIIDYTCCAkmgAwIBAgIUbXX1Z4BDSQPm1Ui41atUtxPL/mEwDQYJKoZIhvcNAQEL
+BQAwQDESMBAGA1UEAwwJUERWIEZhY2lsMRIwEAYDVQQKDAlQRFYgRmFjaWwxFjAU
+BgNVBAsMDVBEViBGYWNpbCBBcHAwHhcNMjYwODIwMTk1MTE2WhcNMzYwODE3MTk1
+MTE2WjBAMRIwEAYDVQQDDAlQRFYgRmFjaWwxEjAQBgNVBAoMCVBEViBGYWNpbDEW
+MBQGA1UECwwNUERWIEZhY2lsIEFwcDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCC
+AQoCggEBAN7Yi7F+KLjhRAnOQRMO78+Gzdklceqsw4ZuFbzEUHnpvxDZJwOOu933
+wme19yruIKtLPVVCgu1alozrxdZW/h9evPrfhYgJ2kC9dy+KRSFrHKM/gA2y5Q1T
+MEvGyTFwtEjJ4ACESuSfSPAzPQaLvxgbrq2bGMxY9MKg1sPX/HS0V/aQsB6OUZ2d
+ncS2RjynkIFZOvgoPB1svKqiWZwf3XawJqF4wfvWIWCFaKcRo7Y4mpaDVGyXt3jr
+qCv9sffX38nEO7/174IKsuddfwqP7mwlL77Knzb3qSxdDUjFHSIGqzg19rAY3+L2
+vmPNBOexDcWWhVy2YTcWqQetz3qekYcCAwEAAaNTMFEwHQYDVR0OBBYEFMOBX4UJ
+NUY8jLk5rBLHXSyH/2gKMB8GA1UdIwQYMBaAFMOBX4UJNUY8jLk5rBLHXSyH/2gK
+MA8GA1UdEwEB/wQFMAMBAf8wDQYJKoZIhvcNAQELBQADggEBAN32q+Lfslnq9BXS
+s4NpIPMZhOCArZd/Ts+wX2wqSWQ5MWf1I3BcpMVQwJdesTYZWIj4JEsKIZ4uSUiV
+Tn/jiG0gzXqgQLv7LGyVXpOtOp4NR/1oDHln+M1pTXougGPLMnflZkEbT8noIv1K
+U4s4r8R2ukrf7IMDktkACnIHNpc7yN9LPRfY6tP9KH0N8KKq3IC79e8lmrdpBl55
+LctYSGJzbS4whZM7ufVowvzVKySsEc2eHquSkDTviEhZ27P4ThudlAVCmPbAKk1g
+6TI9r560vT6qhy9xvV/O8p92knFZSgPs3inI/ri9FPwKyzqq1Yu8Bwv11O1DfQBY
+lzYKo30=
+-----END CERTIFICATE-----`;
+const QZ_PRIVATE_KEY = `-----BEGIN PRIVATE KEY-----
+MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDe2Iuxfii44UQJ
+zkETDu/Phs3ZJXHqrMOGbhW8xFB56b8Q2ScDjrvd98Jntfcq7iCrSz1VQoLtWpaM
+68XWVv4fXrz634WICdpAvXcvikUhaxyjP4ANsuUNUzBLxskxcLRIyeAAhErkn0jw
+Mz0Gi78YG66tmxjMWPTCoNbD1/x0tFf2kLAejlGdnZ3EtkY8p5CBWTr4KDwdbLyq
+olmcH912sCaheMH71iFghWinEaO2OJqWg1Rsl7d466gr/bH319/JxDu/9e+CCrLn
+XX8Kj+5sJS++yp8296ksXQ1IxR0iBqs4NfawGN/i9r5jzQTnsQ3FloVctmE3FqkH
+rc96npGHAgMBAAECggEAJLMS5ms5d6EZnGfMTcAy/EFeGznQde530ObGS60k977o
+CXVJuItEIz0PVhcgmoBW/v7IHgdzGnXFv3WAwljXRwFKLCKtkgbVW74YJ8sksWk7
+cSMfCqKAmF4v4Pre3XaLKkWcz1j6IIae83fsv+w5z1WXwd1+CwFHZdopJF2opOtT
+uODd3ykTvIxhYs3BM83zA/sfES3IWCVUpfLJhRIjg4rWRyy19MsvPfeyycv4Rut3
+SQi9ksS3Fby1Bv0sDpAKiqID+RYNASBzXKYly1ufjRlMQilkXjGUQaSttV/z3urw
+kzHtOLstsaDy3a9eZq08FlbhYRy5jI8yeJp1u7q1uQKBgQDwpOmcP7eeF94k5ipn
+++33SQRpL76lXjAeYSgNt9EMkLVAb8SEecYLi8NrzKUbKtH/a4gRDZ9ZjNAR6OcO
+cYFIC68sawajU2r/0iy+Mb4Oxppsw11iLQfotabkXB546bkTkhSagZov/uOTpDEz
+Prn+bT7cft5+eaLD4un6R0dX3QKBgQDtEOK2mz2Sxnl6jIvSElnBBbYpUqabCrf2
+X4CeS5a9+mTVNgVtdMDKo1QgcZ12zicCqoSzaGdN8tlSSld8Ustb+mkO+Tx6MWNe
+znjHErVLVn1sTT36O2ReKqVh00F/XRJ5BkB4OcaRy8VzmTOwsH4fOScQ3/m9qQ9x
+rxKSeWuKswKBgQDU5VE3xrcvynXhty81J5D0AUlBtde4fYecmN/SoxjzQOLZywfV
+G9a2SEPvjvFTA6MdkYijbaXYl9dMwPwJryltD8k+RsFspVQ4Vzz2VxOKBvJ/3qcz
+QBuLKYoo5cafukbepZJMzvQWGi5EZDKS35+1E/lVIXi98+an3oyZu43GkQKBgQCW
+LNgxrW34CNrzkw0P6qgI6sFWtBDurn+TBzTHEkNP3cr6ddpCWG+47nZghxilJjr4
+KWUe8chfTLP2uTlqfFhuz9a1sZVqItc8O7evBF7sdsHFVbkpR25xaLqTmewn7qHB
+IQC+KHtt6JQQgsCH8YYz6VSiEAB48RvjfHBbcad6mQKBgD6ZOuHA4VLTrw9aT88B
+3fPqlBpqz17HAnORF7Re36na69hQEIv0pa/zDF3DxqMe26rEpevkutIHwymG7Qpl
+c6xdUjui3FADkPUy3sLs7C8EuX1rd+pOt9Uln8zP2jkOMpqr04SuOIgMB5Hy9dgA
+TLYjovSHAHP51xjM/BFk00Fy
+-----END PRIVATE KEY-----`;
+let qzSigningReady = false;
+async function setupQzSigning(){
+  if(qzSigningReady) return;
+  await loadForge();
+  qz.security.setCertificatePromise((resolve)=> resolve(QZ_CERTIFICATE));
+  qz.security.setSignatureAlgorithm('SHA512');
+  qz.security.setSignaturePromise((toSign)=> (resolve, reject)=>{
+    try{
+      const pk = forge.pki.privateKeyFromPem(QZ_PRIVATE_KEY);
+      const md = forge.md.sha512.create();
+      md.update(toSign, 'utf8');
+      const signature = pk.sign(md);
+      resolve(forge.util.encode64(signature));
+    }catch(err){ reject(err); }
+  });
+  qzSigningReady = true;
+}
+async function qzConnect(){
+  await withTimeout(loadQzTray(), 6000);
+  await withTimeout(setupQzSigning(), 6000);
+  if(!qz.websocket.isActive()){
+    await withTimeout(qz.websocket.connect(), 6000);
+  }
+}
+async function qzListPrinters(){
+  await qzConnect();
+  return await qz.printers.find();
+}
+async function printViaQz(text){
+  await qzConnect();
+  const printerName = localSettings.qzPrinterName;
+  if(!printerName) throw new Error('Nenhuma impressora selecionada. Vá em Configuração e escolha a impressora do QZ Tray.');
+  const cfg = qz.configs.create(printerName);
+  // Comandos ESC/POS: inicializa a impressora, liga negrito, imprime o texto,
+  // desliga negrito, alimenta o papel e corta automaticamente.
+  const ESC = '\x1B', GS = '\x1D';
+  const init    = ESC + '@';          // reseta a impressora pro estado padrão
+  const boldOn  = ESC + 'E' + '\x01'; // negrito ligado
+  const boldOff = ESC + 'E' + '\x00'; // negrito desligado
+  const feedCut = '\n\n\n' + GS + 'V' + 'B' + '\x00'; // alimenta e corta o papel
+  const payload = init + boldOn + toPrinterSafeText(text) + boldOff + feedCut;
+  await qz.print(cfg, [{ type:'raw', format:'plain', data: payload }]);
+}
+function openQzPrinterPicker(){
+  showModal(`<h3>Selecionar impressora</h3><p class="small muted">Buscando impressoras no QZ Tray...</p>`);
+  qzListPrinters().then(printers=>{
+    showModal(`
+      <h3>Selecionar impressora</h3>
+      <p class="small muted">Escolha a impressora que vai receber os tickets automaticamente, sem caixa de diálogo:</p>
+      ${printers.length ? printers.map(p=>`<button class="btn btn-outline" style="margin-bottom:8px;" onclick='selectQzPrinter(${JSON.stringify(p)})'>${escapeHtml(p)}</button>`).join('') : '<div class="empty">Nenhuma impressora encontrada no computador.</div>'}
+      <div class="btn-row" style="margin-top:10px;"><button class="btn btn-outline" onclick="closeModal()">Fechar</button></div>
+    `);
+  }).catch(e=>{
+    showModal(`
+      <h3>Não deu pra conectar ao QZ Tray</h3>
+      <p class="small">Verifique se o programa <b>QZ Tray</b> está instalado e aberto no computador (ícone dele deve aparecer na bandeja do sistema, perto do relógio). Se ainda não instalou, baixe gratuitamente em <b>qz.io</b>.</p>
+      <p class="small muted">${escapeHtml(e.message||'')}</p>
+      <div class="btn-row" style="margin-top:10px;"><button class="btn btn-primary" onclick="closeModal()">Entendi</button></div>
+    `);
+  });
+}
+async function selectQzPrinter(name){
+  localSettings.qzPrinterName = name;
+  saveLocalSettings();
+  closeModal();
+  render();
+  alert('Pronto! "'+name+'" foi definida como impressora padrão para impressão direta, só neste aparelho.');
+}
+
+/* Ponto único de disparo de impressão: decide entre o modo padrão (caixa de
+   diálogo do sistema), RawBT (celular) ou QZ Tray (computador), conforme configurado. */
+/* Desenha o ticket como uma imagem (PNG) e compartilha como arquivo — apps
+   como o PrinterApp/Thermer costumam ter uma função de "imprimir imagem" que
+   usa a conexão Bluetooth direta com a impressora, diferente do texto puro
+   compartilhado, que cai no sistema de impressão padrão da Apple (AirPrint). */
+function buildReceiptCanvas(text){
+  const lines = text.split('\n');
+  const fontSize = 30;
+  const lineHeight = Math.round(fontSize * 1.35);
+  const paddingX = 24, paddingY = 24;
+  const canvasWidth = 640;
+  const canvas = document.createElement('canvas');
+  canvas.width = canvasWidth;
+  canvas.height = lines.length * lineHeight + paddingY * 2;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#000000';
+  ctx.font = `bold ${fontSize}px 'Courier New', monospace`;
+  ctx.textBaseline = 'top';
+  lines.forEach((line, i)=>{
+    ctx.fillText(line, paddingX, paddingY + i*lineHeight);
+  });
+  return canvas;
+}
+function shareReceiptAsImage(text){
+  return new Promise((resolve, reject)=>{
+    if(!navigator.share || !navigator.canShare){
+      reject(new Error('Compartilhamento de arquivos não suportado neste navegador.'));
+      return;
+    }
+    const canvas = buildReceiptCanvas(toPrinterSafeText(text));
+    canvas.toBlob(blob=>{
+      if(!blob){ reject(new Error('Não foi possível gerar a imagem do ticket.')); return; }
+      const file = new File([blob], 'ticket.png', { type:'image/png' });
+      if(!navigator.canShare({ files:[file] })){
+        reject(new Error('Compartilhamento de imagens não suportado.'));
+        return;
+      }
+      navigator.share({ files:[file] }).then(resolve).catch(err=>{
+        if(err.name==='AbortError') resolve(); // usuário cancelou, não é erro
+        else reject(err);
+      });
+    }, 'image/png');
+  });
+}
+async function triggerPrint(text){
+  const method = localSettings.printMethod;
+
+  if(method === 'rawbt'){
+    if(!isAndroid()){
+      alert('O modo "Direta via RawBT" só funciona no celular Android. Use o modo "QZ Tray" para impressão direta no computador. Por enquanto, vou usar a impressão padrão.');
+      document.getElementById('printArea').innerText = text;
+      setupPrintLayout();
+      window.print();
+      return;
+    }
+    sendToRawBt(text);
+    return;
+  }
+
+  if(method === 'qz'){
+    try{
+      await printViaQz(text);
+    }catch(e){
+      alert('Não foi possível imprimir direto via QZ Tray:\n\n'+e.message+'\n\nUsando a impressão padrão desta vez.');
+      document.getElementById('printArea').innerText = text;
+      setupPrintLayout();
+      window.print();
+    }
+    return;
+  }
+
+  if(method === 'share'){
+    try{
+      await shareReceiptAsImage(text);
+      return;
+    }catch(e){
+      console.error('Não foi possível compartilhar como imagem, tentando como texto', e);
+    }
+    if(navigator.share){
+      try{
+        await navigator.share({ text: toPrinterSafeText(text) });
+      }catch(e){
+        if(e.name !== 'AbortError'){
+          alert('Não foi possível abrir o menu de compartilhar: ' + e.message);
+        }
+      }
+    } else {
+      alert('Este navegador não suporta o menu de compartilhar. Atualize o Safari, ou use o modo "Padrão" em Configuração.');
+      document.getElementById('printArea').innerText = text;
+      setupPrintLayout();
+      window.print();
+    }
+    return;
+  }
+
+  document.getElementById('printArea').innerText = text;
+  setupPrintLayout();
+  window.print();
+}
+function printReceipt(){
+  if(!lastReceipt) return;
+  triggerPrint(buildReceiptText(lastReceipt));
+}
+
+/* ============================================================
+   CADASTRO DE PRODUTOS
+============================================================ */
+function renderProdutos(){
+  const list = state.products;
+  return `
+    <button class="btn btn-primary" onclick="openProductForm()">+ Novo produto</button>
+    <h2 class="section-title">Produtos cadastrados (${list.length})</h2>
+    ${list.length ? list.map(p=>{
+      const outOfStock = p.stock!=null && p.stock<=0;
+      const statusBadge = outOfStock
+        ? (p.alwaysAvailable ? '<span class="badge green" style="margin-left:6px;">Disponível sem estoque</span>' : '<span class="badge red" style="margin-left:6px;">Esgotado</span>')
+        : '';
+      const hasStockControl = typeof p.stock === 'number';
+      return `
+      <div class="card">
+        <div class="swipe-item">
+          ${p.photo ? `<img class="prod-list-thumb" src="${p.photo}" alt="">` : `<div class="prod-list-thumb-placeholder">${cameraIcon()}</div>`}
+          <div style="flex:1;">
+            <div style="font-weight:700;font-size:14.5px;">${escapeHtml(p.name)}${statusBadge}</div>
+            <div class="small muted">${p.category||'Sem categoria'} ${p.barcode?(' · Cód: '+escapeHtml(p.barcode)):''}</div>
+            <div style="font-weight:800;color:var(--primary);margin-top:2px;">${fmt(p.price)}</div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button class="icon-btn" onclick="openProductForm('${p.id}')">✏️</button>
+            <button class="icon-btn" onclick="deleteProduct('${p.id}')">🗑️</button>
+          </div>
+        </div>
+        ${hasStockControl ? `
+        <div class="stock-adjust">
+          <span class="small muted">Estoque</span>
+          <button class="icon-btn" onclick="adjustStock('${p.id}',-1)">−</button>
+          <input type="number" class="stock-input" value="${p.stock}" onchange="setStockDirect('${p.id}', this.value)">
+          <button class="icon-btn" onclick="adjustStock('${p.id}',1)">+</button>
+        </div>` : ''}
+      </div>`;}).join('') : `<div class="empty">Nenhum produto cadastrado ainda.</div>`}
+  `;
+}
+async function adjustStock(id, delta){
+  await runStateTransaction((s)=>{
+    const p = s.products.find(x=>x.id===id);
+    if(p && typeof p.stock==='number') p.stock = Math.max(0, p.stock + delta);
+  });
+}
+async function setStockDirect(id, value){
+  let v = parseInt(value);
+  if(isNaN(v) || v<0) v = 0;
+  await runStateTransaction((s)=>{
+    const p = s.products.find(x=>x.id===id);
+    if(p) p.stock = v;
+  });
+}
+function openProductForm(id){
+  const p = id ? state.products.find(x=>x.id===id) : null;
+  window._photoDataUrl = p ? (p.photo || null) : null;
+  showModal(`
+    <h3>${p?'Editar produto':'Novo produto'}</h3>
+    <label>Foto do produto</label>
+    <div class="photo-upload">
+      <div class="photo-preview-box" id="photoPreviewBox">
+        ${window._photoDataUrl ? `<img src="${window._photoDataUrl}">` : cameraIcon()}
+      </div>
+      <div class="photo-upload-actions">
+        <label class="photo-btn" for="f_photo_input">📷 ${window._photoDataUrl ? 'Trocar foto' : 'Adicionar foto'}</label>
+        <input type="file" id="f_photo_input" accept="image/*" onchange="handlePhotoSelect(event)">
+        ${window._photoDataUrl ? `<button type="button" class="photo-remove-btn" onclick="removePhoto()">Remover foto</button>` : ''}
+      </div>
+    </div>
+    <label>Nome do produto *</label>
+    <input id="f_name" value="${p?escapeAttr(p.name):''}" placeholder="Ex: Coca-Cola 350ml">
+    <label>Preço de venda (R$) *</label>
+    <input id="f_price" type="text" inputmode="decimal" value="${p?p.price:''}" placeholder="0,00">
+    <label>Categoria</label>
+    <input id="f_category" value="${p?escapeAttr(p.category||''):''}" placeholder="Ex: Bebidas">
+    <label>Código de barras</label>
+    <input id="f_barcode" value="${p?escapeAttr(p.barcode||''):''}" placeholder="Opcional">
+    <label>Estoque (quantidade disponível)</label>
+    <input id="f_stock" type="number" value="${p?p.stock??'':''}" placeholder="Deixe em branco para não controlar estoque">
+    <label style="display:flex; align-items:center; gap:8px; margin-top:14px; cursor:pointer;">
+      <input type="checkbox" id="f_alwaysAvailable" ${p&&p.alwaysAvailable?'checked':''} style="width:18px; height:18px; margin:0;">
+      <span style="font-weight:600; color:var(--text); text-transform:none; font-size:14px;">Manter disponível na venda mesmo com estoque zerado</span>
+    </label>
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveProduct('${id||''}')">Salvar</button>
+    </div>
+  `);
+}
+function handlePhotoSelect(evt){
+  const file = evt.target.files && evt.target.files[0];
+  if(!file) return;
+  resizeImageToDataUrl(file, 320, 0.6).then(dataUrl=>{
+    window._photoDataUrl = dataUrl;
+    refreshPhotoPreview();
+  }).catch(()=>{ alert('Não foi possível carregar essa imagem.'); });
+}
+function removePhoto(){
+  window._photoDataUrl = null;
+  refreshPhotoPreview();
+}
+function refreshPhotoPreview(){
+  const box = document.getElementById('photoPreviewBox');
+  if(box) box.innerHTML = window._photoDataUrl ? `<img src="${window._photoDataUrl}">` : cameraIcon();
+  // reabre o form pra atualizar o texto do botão/remover sem perder os outros campos digitados
+  const name = document.getElementById('f_name')?.value;
+  const price = document.getElementById('f_price')?.value;
+  const category = document.getElementById('f_category')?.value;
+  const barcode = document.getElementById('f_barcode')?.value;
+  const stock = document.getElementById('f_stock')?.value;
+  const actions = document.querySelector('.photo-upload-actions');
+  if(actions){
+    actions.innerHTML = `
+      <label class="photo-btn" for="f_photo_input">📷 ${window._photoDataUrl ? 'Trocar foto' : 'Adicionar foto'}</label>
+      <input type="file" id="f_photo_input" accept="image/*" onchange="handlePhotoSelect(event)">
+      ${window._photoDataUrl ? `<button type="button" class="photo-remove-btn" onclick="removePhoto()">Remover foto</button>` : ''}
+    `;
+  }
+}
+function resizeImageToDataUrl(file, maxDim, quality){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = ()=>{
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = ()=>{
+        let w = img.width, h = img.height;
+        if(w > h && w > maxDim){ h = Math.round(h*maxDim/w); w = maxDim; }
+        else if(h >= w && h > maxDim){ w = Math.round(w*maxDim/h); h = maxDim; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+function cameraIcon(){
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>`;
+}
+async function saveProduct(id){
+  const name = document.getElementById('f_name').value.trim();
+  const price = readMoneyInput('f_price');
+  const category = document.getElementById('f_category').value.trim();
+  const barcode = document.getElementById('f_barcode').value.trim();
+  const stockRaw = document.getElementById('f_stock').value;
+  const alwaysAvailable = document.getElementById('f_alwaysAvailable').checked;
+  if(!name || price<=0){ alert('Preencha nome e um preço válido maior que zero.'); return; }
+  const newStock = stockRaw===''? null : parseInt(stockRaw);
+  const photo = window._photoDataUrl || null;
+  window._photoDataUrl = null;
+
+  const existingProduct = id ? state.products.find(x=>x.id===id) : null;
+  const originalStock = existingProduct ? existingProduct.stock : null;
+  // calcula a DIFERENÇA que o usuário quis fazer no estoque (não o valor
+  // absoluto), pra aplicar como ajuste — assim, se uma venda tiver
+  // acontecido em outro aparelho enquanto este formulário estava aberto,
+  // essa edição não desfaz aquela baixa de estoque sem querer
+  const stockDelta = (typeof originalStock === 'number' && typeof newStock === 'number') ? (newStock - originalStock) : null;
+
+  await runStateTransaction((s)=>{
+    if(id){
+      const p = s.products.find(x=>x.id===id);
+      if(!p) return;
+      Object.assign(p, { name, price, category, barcode, photo, alwaysAvailable });
+      if(stockDelta!==null && typeof p.stock==='number'){
+        p.stock = Math.max(0, p.stock + stockDelta);
+      } else {
+        p.stock = newStock;
+      }
+    } else {
+      s.products.push({ id:uid(), name, price, category, barcode, stock:newStock, photo, alwaysAvailable });
+    }
+  });
+  closeModal();
+}
+async function deleteProduct(id){
+  if(!confirm('Excluir este produto?')) return;
+  await runStateTransaction((s)=>{
+    s.products = s.products.filter(p=>p.id!==id);
+  });
+}
+
+/* ============================================================
+   CAIXA
+============================================================ */
+function salesInSession(){
+  if(!state.cash.openedAt) return [];
+  return state.sales.filter(s=> s.date >= state.cash.openedAt && !s.cancelled);
+}
+function renderCaixa(){
+  if(!state.cash.isOpen){
+    const lastSessions = state.cashSessions.slice(-5).reverse();
+    return `
+      <div class="card" style="text-align:center;padding:24px 14px;">
+        <div style="font-size:15px;font-weight:700;margin-bottom:10px;">Caixa fechado</div>
+        <label style="text-align:left;">Valor inicial (troco)</label>
+        <input id="openAmount" type="text" inputmode="decimal" placeholder="0,00">
+        <button class="btn btn-primary" style="margin-top:14px;" onclick="openCash()">Abrir caixa</button>
+      </div>
+      ${lastSessions.length? `<h2 class="section-title">Últimos fechamentos</h2>` + lastSessions.map(s=>`
+        <div class="card row">
+          <div>
+            <div class="small muted">${new Date(s.openedAt).toLocaleDateString('pt-BR')} — ${new Date(s.closedAt).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+            <div style="font-weight:700;">Vendas: ${fmt(s.totalSales)}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="badge ${Math.abs(s.difference)<0.01?'green':'red'}">${s.difference>=0?'+':''}${fmt(s.difference)}</span>
+            <button class="icon-btn" onclick='showCashCloseReceipt(${JSON.stringify(s).replace(/'/g,"&#39;")})' title="Reimprimir">🖨️</button>
+          </div>
+        </div>`).join('') : ''}
+    `;
+  }
+  const sales = salesInSession();
+  const byPayment = {};
+  sales.forEach(s=>{ salePayments(s).forEach(p=>{ byPayment[p.method] = (byPayment[p.method]||0) + p.amount; }); });
+  const totalSales = sales.reduce((a,s)=>a+s.total,0);
+  const suprimentos = state.cash.movements.filter(m=>m.type==='suprimento').reduce((a,m)=>a+m.amount,0);
+  const sangrias = state.cash.movements.filter(m=>m.type==='sangria').reduce((a,m)=>a+m.amount,0);
+  const dinheiroVendas = byPayment['Dinheiro']||0;
+  const esperadoDinheiro = state.cash.openingAmount + dinheiroVendas + suprimentos - sangrias;
+
+  return `
+    <div class="card">
+      <div class="row"><span class="muted small">Aberto em</span><span>${new Date(state.cash.openedAt).toLocaleString('pt-BR')}</span></div>
+      <div class="row"><span class="muted small">Valor inicial</span><span>${fmt(state.cash.openingAmount)}</span></div>
+    </div>
+    <h2 class="section-title">Resumo da sessão</h2>
+    <div class="card">
+      <table class="simple">
+        <tr><td>Total em vendas</td><td style="text-align:right;font-weight:700;">${fmt(totalSales)}</td></tr>
+        ${Object.keys(byPayment).map(p=>`<tr><td>&nbsp;&nbsp;${p}</td><td style="text-align:right;">${fmt(byPayment[p])}</td></tr>`).join('')}
+        <tr><td>Suprimentos</td><td style="text-align:right;color:var(--success);">+ ${fmt(suprimentos)}</td></tr>
+        <tr><td>Sangrias</td><td style="text-align:right;color:var(--danger);">− ${fmt(sangrias)}</td></tr>
+        <tr><td><b>Esperado em dinheiro</b></td><td style="text-align:right;font-weight:800;">${fmt(esperadoDinheiro)}</td></tr>
+      </table>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="openMovementModal('suprimento')">+ Suprimento</button>
+      <button class="btn btn-ghost" onclick="openMovementModal('sangria')">− Sangria</button>
+    </div>
+    ${state.cash.movements.length? `<h2 class="section-title">Movimentações</h2>` + state.cash.movements.slice().reverse().map(m=>`
+      <div class="card row">
+        <div>
+          <div style="font-weight:700;">${m.type==='sangria'?'Sangria':'Suprimento'}</div>
+          <div class="small muted">${m.note||'-'} · ${new Date(m.date).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</div>
+        </div>
+        <span style="font-weight:700;color:${m.type==='sangria'?'var(--danger)':'var(--success)'}">${m.type==='sangria'?'−':'+'} ${fmt(m.amount)}</span>
+      </div>`).join('') : ''}
+    <button class="btn btn-accent" style="margin-top:16px;" onclick="openCloseCashModal(${esperadoDinheiro}, ${totalSales})">Fechar caixa</button>
+  `;
+}
+async function openCash(){
+  const val = readMoneyInput('openAmount');
+  await runStateTransaction((s)=>{
+    s.cash = {isOpen:true, openedAt:new Date().toISOString(), openingAmount:val, movements:[]};
+  });
+}
+function openMovementModal(type){
+  showModal(`
+    <h3>${type==='sangria'?'Registrar sangria':'Registrar suprimento'}</h3>
+    <label>Valor</label>
+    <input id="mv_amount" type="text" inputmode="decimal" placeholder="0,00">
+    <label>Observação</label>
+    <input id="mv_note" placeholder="Opcional">
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveMovement('${type}')">Salvar</button>
+    </div>
+  `);
+}
+async function saveMovement(type){
+  const amount = readMoneyInput('mv_amount');
+  const note = document.getElementById('mv_note').value.trim();
+  if(!amount || amount<=0){ alert('Informe um valor válido.'); return; }
+  const movement = { type, amount, note, date:new Date().toISOString() };
+  await runStateTransaction((s)=>{ s.cash.movements.push(movement); });
+  closeModal();
+}
+function openCloseCashModal(expected, totalSales){
+  showModal(`
+    <h3>Fechar caixa</h3>
+    <div class="muted small">Valor esperado em dinheiro</div>
+    <div style="font-size:22px;font-weight:800;color:var(--primary);margin-bottom:10px;">${fmt(expected)}</div>
+    <label>Valor contado (informe o que há na gaveta)</label>
+    <input id="counted" type="text" inputmode="decimal" placeholder="0,00" oninput="updateDiff(${expected})">
+    <div class="row" style="margin-top:8px;"><span class="muted small">Diferença</span><span id="diffVal" style="font-weight:800;">R$ 0,00</span></div>
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmCloseCash()">Confirmar fechamento</button>
+    </div>
+  `);
+}
+function updateDiff(expected){
+  const counted = readMoneyInput('counted');
+  const diff = counted - expected;
+  const el = document.getElementById('diffVal');
+  el.textContent = (diff>=0?'+':'') + fmt(diff);
+  el.style.color = Math.abs(diff)<0.01 ? 'var(--success)' : 'var(--danger)';
+}
+/* Recalcula o resumo do caixa em cima de um estado específico (usado dentro
+   da transação, pra garantir que o fechamento sempre usa os dados mais
+   recentes do servidor, não uma cópia que pode estar desatualizada). */
+function computeCashSummary(s){
+  const cash = s.cash;
+  const sessionSales = cash.openedAt ? s.sales.filter(x=> x.date >= cash.openedAt && !x.cancelled) : [];
+  const byPayment = {};
+  sessionSales.forEach(sale=>{ salePayments(sale).forEach(p=>{ byPayment[p.method] = (byPayment[p.method]||0) + p.amount; }); });
+  const suprimentos = cash.movements.filter(m=>m.type==='suprimento').reduce((a,m)=>a+m.amount,0);
+  const sangrias = cash.movements.filter(m=>m.type==='sangria').reduce((a,m)=>a+m.amount,0);
+  const totalSales = sessionSales.reduce((a,x)=>a+x.total,0);
+  const dinheiro = byPayment['Dinheiro']||0;
+  const expected = cash.openingAmount + dinheiro + suprimentos - sangrias;
+  return { sessionSales, byPayment, suprimentos, sangrias, totalSales, expected };
+}
+async function confirmCloseCash(){
+  const counted = readMoneyInput('counted');
+  let resultSession = null;
+  await runStateTransaction((s)=>{
+    if(!s.cash.isOpen) return; // já foi fechado por outro aparelho enquanto isso
+    const { sessionSales, byPayment, suprimentos, sangrias, totalSales, expected } = computeCashSummary(s);
+    const session = {
+      ...s.cash,
+      closedAt: new Date().toISOString(),
+      expected, countedAmount: counted, difference: counted - expected, totalSales,
+      byPayment, suprimentos, sangrias, salesCount: sessionSales.length
+    };
+    s.cashSessions.push(session);
+    s.cash = { isOpen:false, openedAt:null, openingAmount:0, movements:[] };
+    resultSession = session;
+  });
+  closeModal();
+  if(resultSession){ showCashCloseReceipt(resultSession); }
+  else { alert('O caixa já tinha sido fechado (talvez por outro aparelho).'); }
+}
+
+/* ---- Recibo / ticket do fechamento de caixa ---- */
+function buildCashCloseText(session){
+  const c = state.config;
+  const W = paperCharsWidth();
+  const line = ch => ch.repeat(W);
+  const center = t => { const pad = Math.max(0, Math.floor((W - t.length)/2)); return ' '.repeat(pad)+t; };
+  const rowLR = (l,r) => l + ' '.repeat(Math.max(1, W-l.length-r.length)) + r;
+  let out = '';
+  out += center(c.storeName||'Minha Loja') + '\n';
+  out += center('FECHAMENTO DE CAIXA') + '\n';
+  out += line('-') + '\n';
+  out += 'Abertura: ' + new Date(session.openedAt).toLocaleString('pt-BR') + '\n';
+  out += 'Fechamento: ' + new Date(session.closedAt).toLocaleString('pt-BR') + '\n';
+  out += line('-') + '\n';
+  out += rowLR('Valor inicial', fmt(session.openingAmount)) + '\n';
+  out += rowLR('Total em vendas', fmt(session.totalSales)) + '\n';
+  Object.keys(session.byPayment||{}).forEach(p=>{
+    out += rowLR('  '+p, fmt(session.byPayment[p])) + '\n';
+  });
+  out += rowLR('Suprimentos', '+ '+fmt(session.suprimentos||0)) + '\n';
+  out += rowLR('Sangrias', '- '+fmt(session.sangrias||0)) + '\n';
+  out += line('-') + '\n';
+  out += rowLR('Esperado (dinheiro)', fmt(session.expected)) + '\n';
+  out += rowLR('Contado (dinheiro)', fmt(session.countedAmount)) + '\n';
+  out += rowLR('Diferença', (session.difference>=0?'+':'')+fmt(session.difference)) + '\n';
+  out += line('-') + '\n';
+  out += center('Vendas no periodo: '+(session.salesCount??'-')) + '\n';
+  return out;
+}
+function showCashCloseReceipt(session){
+  window._lastCashSession = session;
+  showModal(`
+    <h3>Caixa fechado ✅</h3>
+    <div id="receiptPaper">${buildCashCloseText(session)}</div>
+    <div class="btn-row" style="margin-top:14px;">
+      <button class="btn btn-outline" onclick="closeModal()">Fechar</button>
+      <button class="btn btn-primary" onclick="printCashClose()">🖨️ Imprimir fechamento</button>
+    </div>
+  `);
+}
+function printCashClose(){
+  if(!window._lastCashSession) return;
+  triggerPrint(buildCashCloseText(window._lastCashSession));
+}
+
+/* ============================================================
+   HISTÓRICO DE VENDAS
+============================================================ */
+/* Extrai a data (AAAA-MM-DD) no fuso horário LOCAL do aparelho, não em UTC.
+   Isso é importante: o Brasil é UTC-3, então usar toISOString() (que é UTC)
+   faz vendas feitas entre 21h e 23h59 caírem erroneamente no dia seguinte. */
+function localDateISO(d){
+  const year = d.getFullYear();
+  const month = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${year}-${month}-${day}`;
+}
+function todayISO(){ return localDateISO(new Date()); }
+function saleDateISO(s){ return localDateISO(new Date(s.date)); }
+function salesInPeriod(fromStr, toStr){
+  return state.sales.filter(s=>{ const d = saleDateISO(s); return d>=fromStr && d<=toStr; });
+}
+function summarizeItems(items){
+  return items.map(it=>`${it.qty}x ${it.name}`).join(', ');
+}
+function renderHistorico(){
+  const today = todayISO();
+  const fromStr = window._histFrom || today;
+  const toStr = window._histTo || today;
+  const sales = salesInPeriod(fromStr, toStr).slice().sort((a,b)=> a.date < b.date ? 1 : -1);
+  const validSales = sales.filter(s=>!s.cancelled);
+  const totalPeriodo = validSales.reduce((a,s)=>a+s.total,0);
+  const qtdVendas = validSales.length;
+  const ticketMedio = qtdVendas ? totalPeriodo/qtdVendas : 0;
+
+  return `
+    <div class="row" style="gap:8px; margin-bottom:14px;">
+      <div style="flex:1;">
+        <label style="margin:0 0 4px;">De</label>
+        <input type="date" id="histFrom" value="${fromStr}" max="${today}" onchange="window._histFrom=this.value; if(window._histFrom>window._histTo) window._histTo=window._histFrom; render();">
+      </div>
+      <div style="flex:1;">
+        <label style="margin:0 0 4px;">Até</label>
+        <input type="date" id="histTo" value="${toStr}" max="${today}" onchange="window._histTo=this.value; if(window._histTo<window._histFrom) window._histFrom=window._histTo; render();">
+      </div>
+    </div>
+    <div class="btn-row" style="margin-bottom:14px;">
+      <button class="btn btn-sm btn-ghost" style="flex:1;" onclick="setHistPeriod(0)">Hoje</button>
+      <button class="btn btn-sm btn-ghost" style="flex:1;" onclick="setHistPeriod(7)">Últimos 7 dias</button>
+      <button class="btn btn-sm btn-ghost" style="flex:1;" onclick="setHistPeriod(30)">Últimos 30 dias</button>
+    </div>
+    <div class="small muted" style="margin-bottom:14px; text-align:center;">
+      ${fromStr===toStr
+        ? `Mostrando apenas: <b>${new Date(fromStr+'T00:00:00').toLocaleDateString('pt-BR')}</b>`
+        : `⚠️ Mostrando período de <b>${new Date(fromStr+'T00:00:00').toLocaleDateString('pt-BR')}</b> até <b>${new Date(toStr+'T00:00:00').toLocaleDateString('pt-BR')}</b>`}
+    </div>
+
+    <div class="hist-summary">
+      <div class="card"><div class="hs-label">Total vendido</div><div class="hs-value">${fmt(totalPeriodo)}</div></div>
+      <div class="card"><div class="hs-label">Vendas</div><div class="hs-value">${qtdVendas}</div></div>
+      <div class="card"><div class="hs-label">Ticket médio</div><div class="hs-value">${fmt(ticketMedio)}</div></div>
+    </div>
+
+    <button class="btn btn-primary" style="margin-bottom:14px;" onclick="printSalesReport()">🖨️ Imprimir relatório detalhado do período</button>
+
+    <div class="card">
+      <canvas id="histChart"></canvas>
+    </div>
+
+    <h2 class="section-title">Resumo por Produto</h2>
+    <div class="card">
+      <canvas id="prodChart"></canvas>
+    </div>
+    <div class="card">
+      ${renderProductSummaryList(validSales)}
+    </div>
+
+    <h2 class="section-title">Vendas no período (${sales.length})</h2>
+    <div class="card">
+      ${sales.length ? sales.map(s=>renderSaleRow(s, fromStr!==toStr)).join('') : `<div class="empty" style="padding:20px 10px;">Nenhuma venda nesse período.</div>`}
+    </div>
+  `;
+}
+function productSummaryFromSales(sales){
+  const map = {};
+  sales.forEach(s=>{
+    s.items.forEach(it=>{
+      if(!map[it.name]) map[it.name] = { qty:0, total:0 };
+      map[it.name].qty += it.qty;
+      map[it.name].total += it.price*it.qty;
+    });
+  });
+  return Object.keys(map)
+    .map(name=>({ name, qty:map[name].qty, total:map[name].total }))
+    .sort((a,b)=> b.qty - a.qty);
+}
+function renderProductSummaryList(sales){
+  const items = productSummaryFromSales(sales);
+  if(!items.length) return `<div class="empty" style="padding:14px 10px;">Nenhum produto vendido nesse período.</div>`;
+  return items.map((p,i)=>`
+    <div class="row" style="padding:8px 0; ${i<items.length-1?'border-bottom:1px solid var(--border);':''}">
+      <div>
+        <div style="font-weight:700;">${escapeHtml(p.name)}</div>
+        <div class="small muted">${p.qty} unidade${p.qty!==1?'s':''} vendida${p.qty!==1?'s':''}</div>
+      </div>
+      <div style="font-weight:800; color:var(--primary);">${fmt(p.total)}</div>
+    </div>
+  `).join('');
+}
+function drawProductChart(){
+  const canvas = document.getElementById('prodChart');
+  if(!canvas) return;
+  const fromStr = window._histFrom || todayISO();
+  const toStr = window._histTo || todayISO();
+  const sales = salesInPeriod(fromStr, toStr).filter(s=>!s.cancelled);
+  const items = productSummaryFromSales(sales).slice(0, 8); // top 8 produtos, senão fica ilegível
+
+  const ratio = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth || 300, h = canvas.clientHeight || 180;
+  canvas.width = w*ratio; canvas.height = h*ratio;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(ratio, ratio);
+  ctx.clearRect(0,0,w,h);
+
+  if(!items.length){
+    ctx.fillStyle = '#8A7F6E';
+    ctx.font = '13px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Nenhum produto vendido nesse período', w/2, h/2);
+    return;
+  }
+
+  const padLeft = 8, padRight = 8, padTop = 8, padBottom = 8;
+  const maxQty = Math.max(...items.map(p=>p.qty), 1);
+  const rowH = (h - padTop - padBottom) / items.length;
+  const barH = Math.min(22, rowH*0.55);
+  const labelW = 92; // espaço reservado pro nome do produto à esquerda
+  const valueW = 36; // espaço reservado pro número à direita (nunca corta, mesmo com barra cheia)
+  const barAreaW = w - padLeft - padRight - labelW - valueW;
+  const themeColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#8A6D46';
+
+  items.forEach((p, idx)=>{
+    const cy = padTop + rowH*idx + rowH/2;
+    ctx.fillStyle = '#2B2620';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'left';
+    let label = p.name;
+    if(ctx.measureText(label).width > labelW-6){
+      while(label.length>3 && ctx.measureText(label+'…').width > labelW-6) label = label.slice(0,-1);
+      label += '…';
+    }
+    ctx.fillText(label, padLeft, cy+4);
+
+    const barW = Math.max(2, (p.qty/maxQty) * barAreaW);
+    const bx = padLeft + labelW;
+    const by = cy - barH/2;
+    ctx.fillStyle = themeColor;
+    ctx.beginPath();
+    const r = 4;
+    ctx.moveTo(bx, by+barH);
+    ctx.lineTo(bx, by+r);
+    ctx.arcTo(bx, by, bx+r, by, r);
+    ctx.lineTo(bx+barW-r, by);
+    ctx.arcTo(bx+barW, by, bx+barW, by+r, r);
+    ctx.lineTo(bx+barW, by+barH);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.fillStyle = '#2B2620';
+    ctx.font = 'bold 11px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(String(p.qty), bx+barAreaW+6, cy+4);
+  });
+}
+/* ---- Relatório detalhado de vendas (por produto, forma de pagamento, etc.) ---- */
+function buildSalesReportText(fromStr, toStr){
+  const c = state.config;
+  const W = paperCharsWidth();
+  const line = ch => ch.repeat(W);
+  const center = t => { const pad = Math.max(0, Math.floor((W - t.length)/2)); return ' '.repeat(pad)+t; };
+  const rowLR = (l,r) => l + ' '.repeat(Math.max(1, W-l.length-r.length)) + r;
+
+  const sales = salesInPeriod(fromStr, toStr);
+  const validSales = sales.filter(s=>!s.cancelled);
+  const cancelledCount = sales.length - validSales.length;
+
+  const byPayment = {};
+  validSales.forEach(s=>{ salePayments(s).forEach(p=>{ byPayment[p.method] = (byPayment[p.method]||0) + p.amount; }); });
+
+  const productMap = {};
+  validSales.forEach(s=>{
+    s.items.forEach(it=>{
+      if(!productMap[it.name]) productMap[it.name] = { qty:0, total:0 };
+      productMap[it.name].qty += it.qty;
+      productMap[it.name].total += it.price*it.qty;
+    });
+  });
+  const sortedProducts = Object.keys(productMap).sort((a,b)=>productMap[b].total-productMap[a].total);
+
+  const totalRevenue = validSales.reduce((a,s)=>a+s.total,0);
+  const periodoLabel = fromStr===toStr
+    ? new Date(fromStr+'T00:00:00').toLocaleDateString('pt-BR')
+    : new Date(fromStr+'T00:00:00').toLocaleDateString('pt-BR') + ' a ' + new Date(toStr+'T00:00:00').toLocaleDateString('pt-BR');
+
+  let out = '';
+  out += center(c.storeName||'Minha Loja') + '\n';
+  out += center('RELATORIO DE VENDAS') + '\n';
+  out += line('-') + '\n';
+  out += 'Periodo: ' + periodoLabel + '\n';
+  out += 'Gerado em: ' + new Date().toLocaleString('pt-BR') + '\n';
+  out += line('-') + '\n';
+  out += rowLR('Total de vendas', String(validSales.length)) + '\n';
+  out += rowLR('Faturamento total', fmt(totalRevenue)) + '\n';
+  out += rowLR('Ticket medio', fmt(validSales.length ? totalRevenue/validSales.length : 0)) + '\n';
+  if(cancelledCount) out += rowLR('Vendas canceladas', String(cancelledCount)) + '\n';
+  out += line('-') + '\n';
+
+  out += center('POR FORMA DE PAGAMENTO') + '\n';
+  if(Object.keys(byPayment).length===0){
+    out += center('(sem vendas)') + '\n';
+  } else {
+    Object.keys(byPayment).sort().forEach(p=>{ out += rowLR(p, fmt(byPayment[p])) + '\n'; });
+  }
+  out += line('-') + '\n';
+
+  out += center('PRODUTOS VENDIDOS') + '\n';
+  if(sortedProducts.length===0){
+    out += center('(sem vendas)') + '\n';
+  } else {
+    sortedProducts.forEach(name=>{
+      const info = productMap[name];
+      out += name + '\n';
+      out += rowLR('  ' + info.qty + ' un', fmt(info.total)) + '\n';
+    });
+  }
+  out += line('-') + '\n';
+  out += center(c.footer||'') + '\n';
+  return out;
+}
+function printSalesReport(){
+  try{
+    const fromStr = window._histFrom || todayISO();
+    const toStr = window._histTo || todayISO();
+    const text = buildSalesReportText(fromStr, toStr);
+    triggerPrint(text);
+  }catch(e){
+    console.error('Erro ao gerar relatório de vendas', e);
+    alert('Não foi possível gerar o relatório: ' + e.message);
+  }
+}
+
+function setHistPeriod(daysBack){
+  const today = todayISO();
+  const d = new Date();
+  d.setDate(d.getDate()-daysBack);
+  window._histFrom = localDateISO(d);
+  window._histTo = today;
+  render();
+}
+function renderSaleRow(s, showDate){
+  const dt = new Date(s.date);
+  const time = dt.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  const dateLabel = showDate ? dt.toLocaleDateString('pt-BR')+' · ' : '';
+  let statusBadge = '';
+  if(s.cancelled) statusBadge = '<span class="badge red" style="margin-left:6px;">Cancelada</span>';
+  else if(s.exchanges && s.exchanges.length) statusBadge = '<span class="badge orange" style="margin-left:6px;">Trocada</span>';
+  const paymentLabel = s.payment==='Misto'
+    ? salePayments(s).map(p=>`${p.method} ${fmt(p.amount)}`).join(' + ')
+    : s.payment;
+  return `
+    <div class="sale-row ${s.cancelled?'cancelled':''}">
+      <div class="sr-top">
+        <span class="sr-time">${dateLabel}${time} · ${paymentLabel}${statusBadge}</span>
+        <span class="sr-total">${fmt(s.total)}</span>
+      </div>
+      <div class="sr-items">${escapeHtml(summarizeItems(s.items))}</div>
+      <div class="btn-row">
+        <button class="btn btn-sm btn-ghost" style="flex:1;" onclick='reprintSale(${JSON.stringify(s.id)})'>🖨️ Reimprimir</button>
+        ${!s.cancelled ? `
+        <button class="btn btn-sm btn-danger" style="flex:1;" onclick='confirmCancelSale(${JSON.stringify(s.id)})'>✕ Cancelar</button>` : ''}
+      </div>
+    </div>
+  `;
+}
+function reprintSale(saleId){
+  const sale = state.sales.find(s=>s.id===saleId);
+  if(!sale) return;
+  lastReceipt = sale;
+  showReceiptModal(sale, '🖨️ Reimpressão do ticket');
+}
+function drawHistoricoChart(){
+  const canvas = document.getElementById('histChart');
+  if(!canvas) return;
+  const fromStr = window._histFrom || todayISO();
+  const toStr = window._histTo || todayISO();
+  const sales = salesInPeriod(fromStr, toStr).filter(s=>!s.cancelled);
+  const multiDay = fromStr !== toStr;
+
+  // ajusta resolução do canvas ao tamanho real exibido
+  const ratio = window.devicePixelRatio || 1;
+  const w = canvas.clientWidth || 300, h = canvas.clientHeight || 150;
+  canvas.width = w*ratio; canvas.height = h*ratio;
+  const ctx = canvas.getContext('2d');
+  ctx.scale(ratio, ratio);
+  ctx.clearRect(0,0,w,h);
+
+  const padBottom = 18, padTop = 8;
+  const chartH = h - padBottom - padTop;
+  const barGap = 2;
+
+  let buckets = []; // [{label, value}]
+  if(!multiDay){
+    // agrupa por hora do dia único
+    const hourly = new Array(24).fill(0);
+    sales.forEach(s=>{ hourly[new Date(s.date).getHours()] += s.total; });
+    let firstHour = 6, lastHour = 22;
+    hourly.forEach((v,i)=>{ if(v>0){ firstHour = Math.min(firstHour,i); lastHour = Math.max(lastHour,i);} });
+    for(let i=firstHour;i<=lastHour;i++) buckets.push({label:i+'h', value:hourly[i]});
+  } else {
+    // agrupa por dia do período
+    const byDay = {};
+    sales.forEach(s=>{ const d = saleDateISO(s); byDay[d] = (byDay[d]||0) + s.total; });
+    let cur = new Date(fromStr+'T00:00:00');
+    const end = new Date(toStr+'T00:00:00');
+    while(cur<=end){
+      const iso = localDateISO(cur);
+      buckets.push({label: cur.getDate()+'/'+(cur.getMonth()+1), value: byDay[iso]||0});
+      cur.setDate(cur.getDate()+1);
+    }
+    // limita a no máximo ~31 barras para não espremer demais (já é o range máximo comum)
+  }
+  if(!buckets.length) buckets = [{label:'', value:0}];
+
+  const maxVal = Math.max(...buckets.map(b=>b.value), 1);
+  const bw = (w / buckets.length) - barGap;
+  const labelEvery = buckets.length > 15 ? Math.ceil(buckets.length/10) : (buckets.length>8?2:1);
+
+  buckets.forEach((b, idx)=>{
+    const barH = maxVal>0 ? (b.value/maxVal)*chartH : 0;
+    const x = idx*(bw+barGap);
+    const y = padTop + (chartH - barH);
+    const themeColor = getComputedStyle(document.documentElement).getPropertyValue('--primary').trim() || '#8A6D46';
+    ctx.fillStyle = b.value>0 ? themeColor : '#E8DFCD';
+    ctx.beginPath();
+    const r = 3;
+    ctx.moveTo(x, y+barH);
+    ctx.lineTo(x, y+r);
+    ctx.arcTo(x, y, x+r, y, r);
+    ctx.lineTo(x+bw-r, y);
+    ctx.arcTo(x+bw, y, x+bw, y+r, r);
+    ctx.lineTo(x+bw, y+barH);
+    ctx.closePath();
+    ctx.fill();
+
+    if(idx % labelEvery === 0){
+      ctx.fillStyle = '#6B7785';
+      ctx.font = '9px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(b.label, x+bw/2, h-5);
+    }
+  });
+}
+window.addEventListener('resize', ()=>{ if(activeTab==='historico'){ drawHistoricoChart(); drawProductChart(); } });
+
+/* ---- Cancelamento de venda (devolve tudo ao estoque) ---- */
+function confirmCancelSale(saleId){
+  const sale = state.sales.find(s=>s.id===saleId);
+  if(!sale || sale.cancelled) return;
+  showModal(`
+    <h3>Cancelar venda</h3>
+    <p class="small muted">Essa venda será marcada como cancelada, os itens voltarão automaticamente para o estoque e o valor sairá dos totais do caixa.</p>
+    <div class="card">
+      <div class="small">${escapeHtml(summarizeItems(sale.items))}</div>
+      <div style="font-weight:800;margin-top:6px;">${fmt(sale.total)} · ${sale.payment}</div>
+    </div>
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn btn-outline" onclick="closeModal()">Voltar</button>
+      <button class="btn btn-danger" onclick='executeCancelSale(${JSON.stringify(saleId)})'>Confirmar cancelamento</button>
+    </div>
+  `);
+}
+async function executeCancelSale(saleId){
+  let found = true;
+  await runStateTransaction((s)=>{
+    const sale = s.sales.find(x=>x.id===saleId);
+    if(!sale || sale.cancelled){ found = false; return; }
+    sale.items.forEach(it=>{
+      const p = s.products.find(x=>x.id===it.productId);
+      if(p && typeof p.stock==='number') p.stock += it.qty;
+    });
+    sale.cancelled = true;
+    sale.cancelledAt = new Date().toISOString();
+  });
+  closeModal();
+  if(!found) alert('Essa venda já estava cancelada (talvez por outro aparelho).');
+}
+
+/* ---- Aba dedicada de Troca: busca por número de ticket, e escolhe o(s)
+   produto(s) novo(s) na mesma grade usada na tela de Venda. ---- */
+function findTicketOwnerIn(stateObj, ticketNum){
+  for(const sale of stateObj.sales){
+    if(sale.cancelled) continue;
+    for(let i=0; i<sale.items.length; i++){
+      const it = sale.items[i];
+      if(!it.ticketStart) continue;
+      const start = it.ticketStart, end = start + it.qty - 1;
+      if(ticketNum>=start && ticketNum<=end) return { sale, itemIndex:i };
+    }
+  }
+  return null;
+}
+function findTicketOwner(ticketNum){ return findTicketOwnerIn(state, ticketNum); }
+function renderTroca(){
+  const t = window._troca || (window._troca = { ticketNum:null, sale:null, itemIndex:null, cart:[] });
+
+  if(!t.sale){
+    return `
+      <div class="card" style="text-align:center;padding:24px 14px;">
+        <div style="font-size:15px;font-weight:700;margin-bottom:10px;">Trocar item vendido</div>
+        <label style="text-align:left;">Número do ticket</label>
+        <input type="number" id="trocaTicketInput" placeholder="Ex: 123" onkeydown="if(event.key==='Enter') buscarTicketTroca();">
+        <div id="trocaTicketError" class="small" style="color:var(--danger); margin-top:6px; display:none;"></div>
+        <button class="btn btn-primary" style="margin-top:14px;" onclick="buscarTicketTroca()">Buscar</button>
+      </div>
+    `;
+  }
+
+  const item = t.sale.items[t.itemIndex];
+  if(!item){
+    // o item pode ter sido alterado por outra troca depois dessa busca
+    return `<div class="empty">Este item não está mais disponível para troca.<br><button class="btn btn-outline btn-sm" style="margin-top:10px;" onclick="resetTroca()">Buscar outro ticket</button></div>`;
+  }
+  const creditValue = item.price; // valor de 1 unidade devolvida
+
+  const q = (window._trocaSearchQ||'').toLowerCase();
+  const isAvailable = p => p.alwaysAvailable || p.stock === null || p.stock === undefined || p.stock > 0;
+  const list = state.products.filter(p=> isAvailable(p) && (!q || p.name.toLowerCase().includes(q) || (p.barcode||'').includes(q)));
+  const tileHtml = p => `
+    <button class="prod-tile" onclick="addToTrocaCart('${p.id}')">
+      ${p.photo ? `<img class="prod-photo" src="${p.photo}" alt="">` : `<div class="prod-photo-placeholder">${cameraIcon()}</div>`}
+      <div class="ptext">
+        <div class="pname">${escapeHtml(p.name)}</div>
+        <div class="pprice">${fmt(p.price)}</div>
+        <div class="pstock">${p.stock!=null && p.stock<=0 ? '<span style="color:var(--accent);font-weight:700;">Sem estoque</span>' : 'Estoque: '+(p.stock ?? '-')}</div>
+      </div>
+    </button>`;
+
+  const newItemsTotal = t.cart.reduce((a,c)=>a+c.price*c.qty,0);
+  const diff = newItemsTotal - creditValue;
+
+  return `
+    <div class="card">
+      <div class="row">
+        <div>
+          <div class="small muted">Devolvendo · Ticket Nº ${t.ticketNum}</div>
+          <div style="font-weight:700;">${escapeHtml(item.name)}</div>
+        </div>
+        <div style="font-weight:800;color:var(--primary);">${fmt(creditValue)}</div>
+      </div>
+      <button class="btn btn-outline btn-sm" style="margin-top:10px;width:100%;" onclick="resetTroca()">✕ Cancelar / buscar outro ticket</button>
+    </div>
+
+    <h2 class="section-title">Escolha o novo produto</h2>
+    <input id="trocaSearchBox" placeholder="🔍 Buscar produto..." value="${window._trocaSearchQ||''}" oninput="window._trocaSearchQ=this.value; render();" style="margin-bottom:12px;">
+    <div class="prod-grid">${list.length ? list.map(tileHtml).join('') : '<div class="empty">Nenhum produto disponível.</div>'}</div>
+
+    ${t.cart.length ? `
+    <h2 class="section-title">Itens escolhidos na troca</h2>
+    <div class="card">
+      ${t.cart.map((c,i)=>`
+        <div class="cart-item">
+          <div><div class="ci-name">${escapeHtml(c.name)}</div><div class="ci-price">${fmt(c.price)} cada</div></div>
+          <div class="qty-ctrl">
+            <button onclick="changeTrocaQty(${i},-1)">−</button><span>${c.qty}</span><button onclick="changeTrocaQty(${i},1)">+</button>
+          </div>
+          <div style="font-weight:700;min-width:64px;text-align:right;">${fmt(c.price*c.qty)}</div>
+          <button class="icon-btn" onclick="removeTrocaCartItem(${i})">✕</button>
+        </div>`).join('')}
+    </div>` : ''}
+
+    <div class="card">
+      <div class="row"><span class="muted small">Valor devolvido (crédito)</span><span style="font-weight:700;">${fmt(creditValue)}</span></div>
+      <div class="row"><span class="muted small">Novos itens escolhidos</span><span style="font-weight:700;">${fmt(newItemsTotal)}</span></div>
+      <div class="row" style="border-top:1px solid var(--border); padding-top:8px; margin-top:8px;">
+        <span class="muted small">${diff>0.004?'Diferença a cobrar':diff<-0.004?'Diferença a devolver':'Sem diferença'}</span>
+        <span style="font-weight:800; color:${diff>0.004?'var(--danger)':diff<-0.004?'var(--success)':'var(--text)'};">${fmt(Math.abs(diff))}</span>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" style="margin-top:10px;" onclick="finalizeTroca()">Finalizar troca</button>
+  `;
+}
+function buscarTicketTroca(){
+  const num = parseInt(document.getElementById('trocaTicketInput').value);
+  const err = document.getElementById('trocaTicketError');
+  if(!num){ err.textContent = 'Digite um número de ticket válido.'; err.style.display='block'; return; }
+  const found = findTicketOwner(num);
+  if(!found){ err.textContent = 'Nenhum item encontrado com esse número de ticket.'; err.style.display='block'; return; }
+  window._troca = { ticketNum:num, sale:found.sale, itemIndex:found.itemIndex, cart:[] };
+  window._trocaSearchQ = '';
+  render();
+}
+function resetTroca(){
+  window._troca = { ticketNum:null, sale:null, itemIndex:null, cart:[] };
+  window._trocaSearchQ = '';
+  render();
+}
+function addToTrocaCart(pid){
+  const p = state.products.find(x=>x.id===pid);
+  if(!p) return;
+  const existing = window._troca.cart.find(c=>c.productId===pid);
+  if(existing) existing.qty++;
+  else window._troca.cart.push({ productId:pid, name:p.name, price:p.price, qty:1 });
+  render();
+}
+function changeTrocaQty(i, delta){
+  const c = window._troca.cart[i];
+  c.qty += delta;
+  if(c.qty<=0) window._troca.cart.splice(i,1);
+  render();
+}
+function removeTrocaCartItem(i){
+  window._troca.cart.splice(i,1);
+  render();
+}
+async function finalizeTroca(){
+  const t = window._troca;
+  if(!t || !t.sale) return;
+  const ticketNum = t.ticketNum;
+  const cartSnapshot = t.cart.map(c=>({...c}));
+
+  let txResult = null;
+  await runStateTransaction((s)=>{
+    const found = findTicketOwnerIn(s, ticketNum);
+    if(!found){ txResult = { notFound:true }; return; }
+    const { sale, itemIndex } = found;
+    const oldItem = sale.items[itemIndex];
+
+    // devolve a unidade antiga ao estoque
+    const oldProduct = s.products.find(p=>p.id===oldItem.productId);
+    if(oldProduct && typeof oldProduct.stock==='number') oldProduct.stock += 1;
+    const oldSubtotal = oldItem.price;
+    const oldItemName = oldItem.name;
+    oldItem.qty -= 1;
+    if(oldItem.qty<=0) sale.items.splice(itemIndex,1);
+
+    // adiciona os novos itens escolhidos, cada um SEMPRE com seu próprio
+    // número de ticket novo, calculado em cima do contador mais recente
+    let nextTicket = Math.max(s.ticketCounter || 0, TICKET_START) + 1;
+    const printableNewItems = [];
+    cartSnapshot.forEach(c=>{
+      const np = s.products.find(p=>p.id===c.productId);
+      if(np && typeof np.stock==='number') np.stock = Math.max(0, np.stock - c.qty);
+      sale.items.push({ productId:c.productId, name:c.name, price:c.price, qty:c.qty, ticketStart: nextTicket });
+      printableNewItems.push({ name:c.name, price:c.price, qty:c.qty, ticketStart: nextTicket });
+      nextTicket += c.qty;
+    });
+    s.ticketCounter = nextTicket - 1;
+
+    const newItemsTotal = cartSnapshot.reduce((a,c)=>a+c.price*c.qty,0);
+    const diff = newItemsTotal - oldSubtotal;
+
+    sale.total = sale.items.reduce((a,it)=>a+it.price*it.qty,0);
+    sale.exchanges = sale.exchanges || [];
+    sale.exchanges.push({
+      date: new Date().toISOString(),
+      from: { name: oldItemName, qty:1, ticket: ticketNum },
+      to: cartSnapshot.map(c=>({ name:c.name, qty:c.qty })),
+      diff
+    });
+
+    txResult = { notFound:false, diff, printableNewItems };
+  });
+
+  if(!txResult || txResult.notFound){
+    alert('Este ticket não está mais disponível (pode já ter sido alterado em outro aparelho). Busque de novo.');
+    resetTroca();
+    return;
+  }
+
+  const diff = txResult.diff;
+  const dateStr = new Date().toLocaleString('pt-BR');
+  window._lastTrocaTicketText = txResult.printableNewItems.length ? buildTrocaStubsText(txResult.printableNewItems, dateStr) : null;
+  const diffMsg = Math.abs(diff)<0.01 ? 'Sem diferença de valor.' :
+    (diff>0 ? `Diferença a cobrar do cliente: ${fmt(diff)}` : `Diferença a devolver ao cliente: ${fmt(Math.abs(diff))}`);
+  resetTroca();
+  showModal(`
+    <h3>Troca realizada ✅</h3>
+    <p>${diffMsg}</p>
+    ${diff>0 ? `<p class="small muted">Não esqueça de receber essa diferença do cliente.</p>` : (diff<0 ? `<p class="small muted">Não esqueça de devolver essa diferença ao cliente.</p>` : '')}
+    <div class="btn-row" style="margin-top:14px;">
+      <button class="btn btn-outline" onclick="closeModal()">Fechar</button>
+      ${window._lastTrocaTicketText ? `<button class="btn btn-primary" onclick="printTrocaTicket()">🖨️ Imprimir novo ticket</button>` : ''}
+    </div>
+  `);
+}
+function printTrocaTicket(){
+  if(!window._lastTrocaTicketText) return;
+  triggerPrint(window._lastTrocaTicketText);
+}
+function buildTrocaStubsText(items, dateStr){
+  const c = state.config;
+  const W = paperCharsWidth();
+  const { boxTop, boxBottom, boxDivider, boxBlank, boxText, dottedSeparator } = makeBoxHelpers(W);
+  let out = '';
+  items.forEach(it=>{
+    for(let unit=1; unit<=it.qty; unit++){
+      const ticketNum = it.ticketStart + (unit-1);
+      out += boxTop() + '\n';
+      out += boxText(c.storeName||'Minha Loja') + '\n';
+      out += boxText(dateStr) + '\n';
+      out += boxDivider() + '\n';
+      out += boxBlank() + '\n';
+      out += boxText(it.name.toUpperCase()) + '\n';
+      out += boxBlank() + '\n';
+      out += boxText(fmt(it.price)) + '\n';
+      out += boxBlank() + '\n';
+      out += boxDivider() + '\n';
+      out += boxText('Ticket Nº ' + ticketNum) + '\n';
+      out += boxBottom() + '\n';
+      out += dottedSeparator();
+    }
+  });
+  return out;
+}
+
+/* ============================================================
+   CONFIGURAÇÃO
+============================================================ */
+function renderConfig(){
+  const c = state.config;
+  const currentColor = c.themeColor || '#8A6D46';
+  const themePresets = [
+    { name:'Bege (padrão)', hex:'#8A6D46' },
+    { name:'Verde', hex:'#0F6B5C' },
+    { name:'Azul', hex:'#2E5C8A' },
+    { name:'Roxo', hex:'#6B4E8A' },
+    { name:'Vinho', hex:'#8A3D4E' },
+    { name:'Laranja', hex:'#C9702F' },
+    { name:'Grafite', hex:'#3E3E3E' },
+    { name:'Rosa', hex:'#B5527A' },
+  ];
+  const isCustomColor = !themePresets.some(t=>t.hex.toLowerCase()===currentColor.toLowerCase());
+  return `
+    <h2 class="section-title">Cor do tema</h2>
+    <div class="card">
+      <div class="theme-swatch-grid">
+        ${themePresets.map(t=>`
+          <button class="theme-swatch ${currentColor.toLowerCase()===t.hex.toLowerCase()?'selected':''}" style="background:${t.hex};" title="${t.name}" onclick="selectThemeColor('${t.hex}')"></button>
+        `).join('')}
+        <label class="theme-swatch theme-swatch-custom ${isCustomColor?'selected':''}" title="Cor personalizada" style="${isCustomColor?`background:${currentColor};`:''}">
+          <input type="color" value="${currentColor}" oninput="selectThemeColor(this.value)" style="opacity:0;width:100%;height:100%;cursor:pointer;">
+        </label>
+      </div>
+      <div class="small muted" style="margin-top:10px;">Toque num quadrado pra aplicar na hora. O último ícone permite escolher qualquer cor personalizada.</div>
+    </div>
+    <h2 class="section-title">Dados da loja (impressos no ticket)</h2>
+    <div class="card">
+      <label>Nome da loja</label>
+      <input id="c_name" value="${escapeAttr(c.storeName)}">
+      <label>Endereço</label>
+      <input id="c_address" value="${escapeAttr(c.address)}">
+      <label>CNPJ / CPF</label>
+      <input id="c_cnpj" value="${escapeAttr(c.cnpj)}">
+      <label>Telefone</label>
+      <input id="c_phone" value="${escapeAttr(c.phone)}">
+      <label>Mensagem de rodapé</label>
+      <input id="c_footer" value="${escapeAttr(c.footer)}">
+      <label>Largura do papel da impressora</label>
+      <select id="c_printerWidth">
+        <option value="58" ${c.printerWidth!=='80'?'selected':''}>58mm (padrão)</option>
+        <option value="80" ${c.printerWidth==='80'?'selected':''}>80mm</option>
+      </select>
+      <button class="btn btn-primary" style="margin-top:14px;" onclick="saveConfig()">Salvar configurações</button>
+    </div>
+    <h2 class="section-title">Modo de impressão (só neste aparelho)</h2>
+    <div class="card">
+      <div class="small muted" style="margin-bottom:10px;">Essa opção fica salva só neste celular/computador — cada aparelho pode ter sua própria impressora conectada de um jeito diferente.</div>
+      <select id="c_printMethod" onchange="onPrintMethodChange(this.value)">
+        <option value="dialog" ${localSettings.printMethod==='dialog'?'selected':''}>Padrão (mostra caixa de escolha de impressora)</option>
+        <option value="rawbt" ${localSettings.printMethod==='rawbt'?'selected':''}>Direta via RawBT — só no celular Android</option>
+        <option value="qz" ${localSettings.printMethod==='qz'?'selected':''}>Direta via QZ Tray — computador, funciona online</option>
+        <option value="share" ${localSettings.printMethod==='share'?'selected':''}>Compartilhar — iPhone/iPad</option>
+      </select>
+      <div id="rawbtHint" class="small muted" style="margin-top:6px; display:${localSettings.printMethod==='rawbt'?'block':'none'};">
+        ⚠️ Funciona <b>somente no celular Android</b>. Exige o app gratuito <b>RawBT</b> instalado, com a impressora térmica já configurada nele como padrão.
+      </div>
+      <div id="qzHint" class="small muted" style="margin-top:6px; display:${localSettings.printMethod==='qz'?'block':'none'};">
+        ⚠️ Funciona <b>somente no computador</b>. Exige o programa gratuito <b>QZ Tray</b> instalado e aberto (baixe em qz.io). Funciona mesmo com o app rodando online, sem precisar de nenhum atalho especial.
+        <div style="margin-top:8px;">
+          <b>Impressora selecionada:</b> ${localSettings.qzPrinterName ? escapeHtml(localSettings.qzPrinterName) : '<span style="color:var(--danger);">nenhuma ainda</span>'}
+        </div>
+        <button type="button" class="btn btn-outline btn-sm" style="margin-top:8px;" onclick="openQzPrinterPicker()">Escolher impressora</button>
+      </div>
+      <div id="shareHint" class="small muted" style="margin-top:6px; display:${localSettings.printMethod==='share'?'block':'none'};">
+        ⚠️ Pensado pro <b>iPhone/iPad</b>, onde não existe um app tipo RawBT. Instale um app de impressão térmica da App Store (ex: <b>Thermer</b> — "Bluetooth Thermal Printer"), pareie sua impressora nele. Ao tocar em Imprimir, o iPhone abre o menu de <b>Compartilhar</b> — escolha o app de impressora nessa lista. Não some a caixa de diálogo totalmente, mas evita ficar preso na tela de impressão padrão da Apple, que não enxerga impressoras Bluetooth genéricas.
+      </div>
+    </div>
+    <h2 class="section-title">Alternativa no computador (sem instalar nada)</h2>
+    <div class="card small muted">
+      Se preferir não instalar o QZ Tray, ainda existe o atalho do Chrome com o parâmetro <code>--kiosk-printing</code>, que também pula a caixa de diálogo — mas só funciona nesse computador específico, não em qualquer um que acessar o app online. Peça ajuda se quiser configurar assim.
+    </div>
+    <h2 class="section-title">Usuários</h2>
+    <div class="card">
+      ${fbAvailable ? renderFirebaseUsersList() : renderLocalUsersList()}
+      <button class="btn btn-outline btn-sm" style="margin-top:12px; width:100%;" onclick="openUserForm()">+ Novo usuário</button>
+    </div>
+    <h2 class="section-title">Limpar histórico de vendas</h2>
+    <div class="card">
+      <div class="small muted" style="margin-bottom:10px;">Use isso para apagar vendas de teste antes de começar a operar de verdade. Produtos e usuários cadastrados não são afetados.</div>
+      <label>De</label>
+      <input type="date" id="clr_from" max="${todayISO()}">
+      <label>Até</label>
+      <input type="date" id="clr_to" max="${todayISO()}">
+      <label style="display:flex; align-items:center; gap:8px; margin-top:12px; cursor:pointer;">
+        <input type="checkbox" id="clr_alsoCash" style="width:18px; height:18px; margin:0;">
+        <span style="font-weight:600; color:var(--text); text-transform:none; font-size:14px;">Também apagar os fechamentos de caixa desse período</span>
+      </label>
+      <button class="btn btn-danger" style="margin-top:14px;" onclick="clearSalesHistory()">Limpar vendas do período</button>
+      <button class="btn btn-outline" style="margin-top:8px;" onclick="clearAllSalesHistory()">Apagar TODO o histórico (zerar para começar a usar de verdade)</button>
+    </div>
+    <h2 class="section-title">Backup dos dados</h2>
+    <div class="card">
+      <div class="small muted" style="margin-bottom:10px;">Baixe uma cópia de segurança de tudo (produtos, vendas, usuários) num arquivo no seu celular ou computador — independente da nuvem. Guarde de vez em quando, principalmente antes de mudanças grandes.</div>
+      <button class="btn btn-outline" onclick="downloadBackup()">⬇️ Baixar backup agora</button>
+      <label class="btn btn-outline" style="margin-top:8px; display:block; text-align:center;" for="restoreBackupInput">⬆️ Restaurar de um arquivo de backup</label>
+      <input type="file" id="restoreBackupInput" accept=".json" style="display:none;" onchange="handleRestoreFile(event)">
+    </div>
+    <h2 class="section-title">Dados</h2>
+    <div class="card">
+      <div class="small muted" style="margin-bottom:10px;">${state.products.length} produtos · ${state.sales.length} vendas registradas · ${state.cashSessions.length} fechamentos de caixa</div>
+      <button class="btn btn-danger" onclick="wipeData()">Apagar todos os dados</button>
+    </div>
+  `;
+}
+function downloadBackup(){
+  const dataStr = JSON.stringify(state, null, 2);
+  const blob = new Blob([dataStr], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0,19).replace(/[:T]/g,'-');
+  a.href = url;
+  a.download = `backup-pdv-${stamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function handleRestoreFile(evt){
+  const file = evt.target.files && evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    let parsed;
+    try{ parsed = JSON.parse(reader.result); }
+    catch(e){ alert('Esse arquivo não parece ser um backup válido.'); return; }
+    if(!parsed.products || !parsed.sales || !parsed.users){
+      alert('Esse arquivo não parece ser um backup válido do PDV Fácil.');
+      return;
+    }
+    window._pendingRestore = parsed;
+    showModal(`
+      <h3 style="color:var(--danger);">⚠️ Restaurar backup</h3>
+      <p class="small">Isso vai <b>substituir todos os dados atuais</b> (produtos, vendas, usuários) pelos do arquivo selecionado. Não tem como desfazer depois.</p>
+      <label>Digite sua senha de administrador para confirmar</label>
+      <input type="password" id="restoreAdminPass" placeholder="Sua senha">
+      <div id="restoreError" class="small" style="color:var(--danger); margin-top:6px; display:none;"></div>
+      <div class="btn-row" style="margin-top:16px;">
+        <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+        <button class="btn btn-danger" onclick="confirmRestoreBackup()">Restaurar</button>
+      </div>
+    `);
+  };
+  reader.readAsText(file);
+  evt.target.value = ''; // permite escolher o mesmo arquivo de novo depois, se precisar
+}
+async function confirmRestoreBackup(){
+  const pass = document.getElementById('restoreAdminPass').value;
+  const err = document.getElementById('restoreError');
+  if(!currentUser){ closeModal(); return; }
+  const valid = await verifyCurrentUserPassword(pass);
+  if(!valid){
+    err.textContent = 'Senha incorreta.';
+    err.style.display = 'block';
+    return;
+  }
+  state = window._pendingRestore;
+  window._pendingRestore = null;
+  const ok = await saveState();
+  closeModal();
+  render();
+  if(ok) alert('Backup restaurado com sucesso!');
+}
+async function clearSalesHistory(){
+  const from = document.getElementById('clr_from').value;
+  const to = document.getElementById('clr_to').value;
+  if(!from || !to){ alert('Selecione as duas datas (De e Até).'); return; }
+  if(from>to){ alert('A data "De" não pode ser depois da data "Até".'); return; }
+  const alsoCash = document.getElementById('clr_alsoCash').checked;
+  const count = state.sales.filter(s=> saleDateISO(s)>=from && saleDateISO(s)<=to).length;
+  if(count===0){ alert('Nenhuma venda encontrada nesse período.'); return; }
+  if(!confirm(`Isso vai apagar ${count} venda(s) registradas entre ${from} e ${to}. Essa ação não pode ser desfeita. Continuar?`)) return;
+  state.sales = state.sales.filter(s=> !(saleDateISO(s)>=from && saleDateISO(s)<=to));
+  if(alsoCash){
+    state.cashSessions = state.cashSessions.filter(cs=>{
+      const d = cs.closedAt ? cs.closedAt.slice(0,10) : null;
+      return !(d && d>=from && d<=to);
+    });
+  }
+  const ok = await saveState();
+  render();
+  if(ok) alert('Histórico do período apagado com sucesso.');
+}
+async function clearAllSalesHistory(){
+  if(!confirm('Isso vai apagar TODO o histórico de vendas e fechamentos de caixa, zerando o sistema para começar a operar de verdade. Produtos e usuários cadastrados NÃO serão apagados. Continuar?')) return;
+  if(!confirm('Tem certeza mesmo? Essa ação não pode ser desfeita.')) return;
+  state.sales = [];
+  state.cashSessions = [];
+  const ok = await saveState();
+  render();
+  if(ok) alert('Histórico de vendas zerado. O sistema está pronto para começar a operar de verdade.');
+}
+function renderLocalUsersList(){
+  return state.users.map(u=>`
+    <div class="row" style="padding:10px 0; border-bottom:1px solid var(--border);">
+      <div>
+        <div style="font-weight:700;">${escapeHtml(u.username)} ${currentUser && u.id===currentUser.id?'<span class="small muted">(você)</span>':''}</div>
+        <span class="badge ${u.role==='admin'?'green':'orange'}">${u.role==='admin'?'Administrador':'Usuário comum'}</span>
+      </div>
+      ${(!currentUser || u.id!==currentUser.id) ? `<button class="icon-btn" onclick='deleteLocalUser(${JSON.stringify(u.id)})'>🗑️</button>` : ''}
+    </div>`).join('');
+}
+function renderFirebaseUsersList(){
+  const list = window._fbUserList || [];
+  if(!list.length) return `<div class="small muted">Carregando usuários...</div>`;
+  return list.map(u=>`
+    <div class="row" style="padding:10px 0; border-bottom:1px solid var(--border);">
+      <div>
+        <div style="font-weight:700;">${escapeHtml(u.email)} ${currentUser && u.id===currentUser.id?'<span class="small muted">(você)</span>':''}</div>
+        <span class="badge ${u.role==='admin'?'green':'orange'}">${u.role==='admin'?'Administrador':'Usuário comum'}</span>
+      </div>
+      ${(!currentUser || u.id!==currentUser.id) ? `<button class="icon-btn" onclick='removeFirebaseUser(${JSON.stringify(u.id)})'>🗑️</button>` : ''}
+    </div>`).join('');
+}
+async function loadFirebaseUserList(){
+  if(!fbAvailable) return;
+  try{
+    const snap = await withTimeout(fbDb.collection('pdv_users').get(), 6000);
+    window._fbUserList = snap.docs.map(d=>({ id:d.id, ...d.data() }));
+  }catch(e){ console.error('Não foi possível carregar a lista de usuários', e); }
+  if(activeTab==='config') render();
+}
+function openUserForm(){
+  if(fbAvailable) return openFirebaseUserForm();
+  return openLocalUserForm();
+}
+function openFirebaseUserForm(){
+  showModal(`
+    <h3>Novo usuário</h3>
+    <label>E-mail</label>
+    <input id="nu_email" type="email" autocomplete="off">
+    <label>Senha</label>
+    <input id="nu_pass" type="password" placeholder="mínimo 6 caracteres">
+    <label>Confirmar senha</label>
+    <input id="nu_pass2" type="password">
+    <label>Tipo de acesso</label>
+    <select id="nu_role">
+      <option value="comum">Usuário comum (sem acesso à Configuração)</option>
+      <option value="admin">Administrador (acesso total)</option>
+    </select>
+    <div id="nuError" class="small" style="color:var(--danger); margin-top:6px;"></div>
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveFirebaseNewUser()">Criar usuário</button>
+    </div>
+  `);
+}
+async function saveFirebaseNewUser(){
+  const email = document.getElementById('nu_email').value.trim();
+  const pass = document.getElementById('nu_pass').value;
+  const pass2 = document.getElementById('nu_pass2').value;
+  const role = document.getElementById('nu_role').value;
+  const err = document.getElementById('nuError');
+  if(!email || pass.length<6){ err.textContent = 'Preencha o e-mail e uma senha com pelo menos 6 caracteres.'; err.style.display='block'; return; }
+  if(pass!==pass2){ err.textContent = 'As senhas não coincidem.'; err.style.display='block'; return; }
+  try{
+    // usa uma instância secundária do Firebase, só pra criar essa conta —
+    // assim o administrador que está criando o usuário não é deslogado
+    const secondaryApp = firebase.apps.find(a=>a.name==='Secondary') || firebase.initializeApp(firebaseConfig, 'Secondary');
+    const secAuth = secondaryApp.auth();
+    const cred = await secAuth.createUserWithEmailAndPassword(email, pass);
+    await fbDb.collection('pdv_users').doc(cred.user.uid).set({ email, role, createdAt: Date.now() });
+    await secAuth.signOut();
+    closeModal();
+    await loadFirebaseUserList();
+    alert('Usuário criado com sucesso!');
+  }catch(e){
+    err.textContent = translateFirebaseAuthError(e);
+    err.style.display = 'block';
+  }
+}
+async function removeFirebaseUser(userId){
+  const list = window._fbUserList || [];
+  const target = list.find(u=>u.id===userId);
+  if(!target) return;
+  const remainingAdmins = list.filter(u=>u.role==='admin' && u.id!==userId).length;
+  if(target.role==='admin' && remainingAdmins===0){
+    alert('Não é possível remover o único administrador. Crie outro administrador antes de remover este.');
+    return;
+  }
+  if(!confirm(`Remover o acesso de "${target.email}"? (a conta de login dele continua existindo, mas ele não vai mais conseguir entrar no app)`)) return;
+  try{
+    await fbDb.collection('pdv_users').doc(userId).delete();
+    await loadFirebaseUserList();
+  }catch(e){
+    alert('Não foi possível remover: ' + e.message);
+  }
+}
+function openLocalUserForm(){
+  showModal(`
+    <h3>Novo usuário</h3>
+    <label>Usuário</label>
+    <input id="nu_username" autocomplete="off" placeholder="ex: caixa1">
+    <label>Senha</label>
+    <input id="nu_pass" type="password" placeholder="mínimo 4 caracteres">
+    <label>Confirmar senha</label>
+    <input id="nu_pass2" type="password">
+    <label>Tipo de acesso</label>
+    <select id="nu_role">
+      <option value="comum">Usuário comum (sem acesso à Configuração)</option>
+      <option value="admin">Administrador (acesso total)</option>
+    </select>
+    <div id="nuError" class="small" style="color:var(--danger); margin-top:6px;"></div>
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-primary" onclick="saveLocalNewUser()">Criar usuário</button>
+    </div>
+  `);
+}
+async function saveLocalNewUser(){
+  const username = document.getElementById('nu_username').value.trim();
+  const pass = document.getElementById('nu_pass').value;
+  const pass2 = document.getElementById('nu_pass2').value;
+  const role = document.getElementById('nu_role').value;
+  const err = document.getElementById('nuError');
+  if(!username || pass.length<4){ err.textContent = 'Preencha o usuário e uma senha com pelo menos 4 caracteres.'; return; }
+  if(pass!==pass2){ err.textContent = 'As senhas não coincidem.'; return; }
+  if(state.users.some(u=>u.username.toLowerCase()===username.toLowerCase())){ err.textContent = 'Já existe um usuário com esse nome.'; return; }
+  const passwordHash = await hashPw(pass);
+  state.users.push({ id: uid(), username, passwordHash, role });
+  const ok = await saveState();
+  closeModal();
+  render();
+  if(ok) alert('Usuário criado com sucesso!');
+}
+async function deleteLocalUser(userId){
+  const target = state.users.find(u=>u.id===userId);
+  if(!target) return;
+  const remainingAdmins = state.users.filter(u=>u.role==='admin' && u.id!==userId).length;
+  if(target.role==='admin' && remainingAdmins===0){
+    alert('Não é possível excluir o único administrador. Crie outro administrador antes de excluir este.');
+    return;
+  }
+  if(!confirm(`Excluir o usuário "${target.username}"?`)) return;
+  state.users = state.users.filter(u=>u.id!==userId);
+  await saveState();
+  render();
+}
+function onPrintMethodChange(value){
+  localSettings.printMethod = value;
+  saveLocalSettings();
+  document.getElementById('rawbtHint').style.display = value==='rawbt' ? 'block' : 'none';
+  document.getElementById('qzHint').style.display = value==='qz' ? 'block' : 'none';
+  document.getElementById('shareHint').style.display = value==='share' ? 'block' : 'none';
+}
+async function saveConfig(){
+  state.config = {
+    ...state.config,
+    storeName: document.getElementById('c_name').value.trim() || 'Minha Loja',
+    address: document.getElementById('c_address').value.trim(),
+    cnpj: document.getElementById('c_cnpj').value.trim(),
+    phone: document.getElementById('c_phone').value.trim(),
+    footer: document.getElementById('c_footer').value.trim(),
+    printerWidth: document.getElementById('c_printerWidth').value,
+  };
+  const ok = await saveState();
+  render();
+  if(ok) alert('Configurações salvas!');
+}
+function wipeData(){
+  showModal(`
+    <h3 style="color:var(--danger);">⚠️ Apagar todos os dados</h3>
+    <p class="small">Isso vai apagar <b>PERMANENTEMENTE</b> todos os produtos, vendas e histórico de caixa cadastrados no sistema. Não tem como desfazer essa ação depois de confirmada.</p>
+    <p class="small muted">Os usuários cadastrados não serão apagados.</p>
+    <label>Digite sua senha de administrador para confirmar</label>
+    <input type="password" id="wipeAdminPass" placeholder="Sua senha">
+    <div id="wipeError" class="small" style="color:var(--danger); margin-top:6px; display:none;">Senha incorreta.</div>
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-danger" onclick="confirmWipeData()">Apagar tudo</button>
+    </div>
+  `);
+}
+async function confirmWipeData(){
+  const pass = document.getElementById('wipeAdminPass').value;
+  const err = document.getElementById('wipeError');
+  if(!currentUser){ closeModal(); return; }
+  const valid = await verifyCurrentUserPassword(pass);
+  if(!valid){
+    err.style.display = 'block';
+    return;
+  }
+  state = { products:[], sales:[], cashSessions:[], cash:{isOpen:false,openedAt:null,openingAmount:0,movements:[]}, config: state.config, users: state.users || [] };
+  cart = [];
+  await saveState();
+  closeModal();
+  render();
+  alert('Todos os dados foram apagados. O sistema está pronto para começar do zero.');
+}
+
+/* ============================================================
+   HELPERS
+============================================================ */
+function escapeHtml(s){ return (s||'').toString().replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeAttr(s){ return escapeHtml(s); }
+
+/* ============================================================
+   INIT
+============================================================ */
+loadState();
+</script>
+</body>
+</html>
