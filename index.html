@@ -1578,7 +1578,14 @@ function openCartReview(){
       <button class="btn btn-outline" onclick="closeModal()">Continuar comprando</button>
       <button class="btn btn-primary" onclick="closeModal(); openPaymentModal();">Ir para pagamento ▸</button>
     </div>
+    <button class="btn btn-danger btn-sm" style="margin-top:10px;width:100%;" onclick="cancelCartSale()">Cancelar venda</button>
   `);
+}
+function cancelCartSale(){
+  if(!confirm('Cancelar essa venda? O carrinho será esvaziado e nada será registrado.')) return;
+  cart = [];
+  closeModal();
+  render();
 }
 function renderCartReview(){
   const list = document.getElementById('cartReviewList');
